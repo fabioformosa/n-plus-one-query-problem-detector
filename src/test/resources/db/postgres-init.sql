@@ -1,0 +1,4 @@
+CREATE USER nplusonequeryproblemdetector PASSWORD 'nplusonequeryproblemdetector';
+CREATE DATABASE nplusonequeryproblemdetector;
+GRANT ALL PRIVILEGES ON DATABASE nplusonequeryproblemdetector TO nplusonequeryproblemdetector;
+ALTER ROLE nplusonequeryproblemdetector SUPERUSER;
