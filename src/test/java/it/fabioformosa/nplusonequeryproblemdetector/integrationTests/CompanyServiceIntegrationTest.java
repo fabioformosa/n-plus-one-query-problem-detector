@@ -84,7 +84,7 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
     }
 
     /**
-     * Specifying a join fetch into the query, the problem explained above is solved!
+     * Specifying a join fetch through the JPA specification, the problem explained above is solved!
      */
     @Test
     void givenCompaniesWithAssociationEmployees_whenTheQueryFetchesExplicitlyViaSpecification_thenTheNPlus1QueryProblemIsNotPresent(){

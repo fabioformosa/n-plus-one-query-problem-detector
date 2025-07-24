@@ -28,7 +28,7 @@ public abstract class AbstractIntegrationTestSuite {
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-            if (Arrays.stream(configurableApplicationContext.getEnvironment().getActiveProfiles()).anyMatch(POSTGRESQL_SPRING_PROFILE::equals)) {
+            if (Arrays.asList(configurableApplicationContext.getEnvironment().getActiveProfiles()).contains(POSTGRESQL_SPRING_PROFILE)) {
                 getOrRunAPostgresqlContainer();
                 initPostgresqlContainer(configurableApplicationContext);
             } else initH2Datasource(configurableApplicationContext);

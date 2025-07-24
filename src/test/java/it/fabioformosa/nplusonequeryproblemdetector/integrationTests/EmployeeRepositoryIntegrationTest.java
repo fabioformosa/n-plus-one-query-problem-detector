@@ -28,7 +28,7 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
 
     /**
      * By default, All ManyToOne associations are defined with fetchType=Eager
-     * If the query doesn't specify explicitly a "join fetch", the associated entity is fetched performing an extra query
+     * If the query doesn't specify explicitly a "join fetch", the associated entity is immediately fetched performing an extra query
      */
     @Test
     void givenEmployeesWithAManyToOneAssociationWithCompanies_whenTheFetchTypeIsEager_thenTheNPlus1QueryProblemIsPresent() {
@@ -43,7 +43,7 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);
 
         //Assert the association is eager
-        Assertions.assertThat(paginatedEmployeeList.getContent().get(0).getCompany()).isNotNull();
+        Assertions.assertThat(paginatedEmployeeList.getContent().getFirst().getCompany()).isNotNull();
 
         Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
 
@@ -70,7 +70,7 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);
 
         //Assert the association is eager
-        Assertions.assertThat(paginatedEmployeeList.getContent().get(0).getCompany()).isNotNull();
+        Assertions.assertThat(paginatedEmployeeList.getContent().getFirst().getCompany()).isNotNull();
 
         Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
 
