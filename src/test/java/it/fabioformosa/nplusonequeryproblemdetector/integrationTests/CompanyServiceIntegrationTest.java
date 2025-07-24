@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;

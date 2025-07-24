@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.CompanyRepository;
