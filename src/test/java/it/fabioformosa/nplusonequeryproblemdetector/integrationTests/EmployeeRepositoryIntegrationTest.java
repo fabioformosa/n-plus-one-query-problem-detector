@@ -38,6 +38,11 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         Page<Employee> paginatedEmployeeList = employeeRepository.findAll(PageRequest.of(0, pageSize, Sort.by("id")));
+        AsciiLogUtils.displayEntitiesViaLogs(paginatedEmployeeList.getContent(),
+                new String[] { "ID", "First name", "Last name", "Company" },
+                e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompany().getName() }
+        );
+
         Assertions.assertThat(paginatedEmployeeList.getTotalElements()).isEqualTo(1000);
         Assertions.assertThat(paginatedEmployeeList.getContent()).hasSize(pageSize);
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);
@@ -65,6 +70,11 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         Page<Employee> paginatedEmployeeList = employeeRepository.findAll(EmployeeService.fetchCompanySpecification(), PageRequest.of(0, pageSize, Sort.by("id")));
+        AsciiLogUtils.displayEntitiesViaLogs(paginatedEmployeeList.getContent(),
+                new String[] { "ID", "First name", "Last name", "Company" },
+                e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompany().getName() }
+        );
+
         Assertions.assertThat(paginatedEmployeeList.getTotalElements()).isEqualTo(1000);
         Assertions.assertThat(paginatedEmployeeList.getContent()).hasSize(pageSize);
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);

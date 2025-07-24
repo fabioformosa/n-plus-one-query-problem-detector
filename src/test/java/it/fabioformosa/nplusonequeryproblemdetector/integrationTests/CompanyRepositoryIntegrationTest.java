@@ -38,6 +38,12 @@ class CompanyRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
         statistics.clear();
 
         Page<Company> companyPage = companyRepository.findAll(PageRequest.of(0, 5, Sort.by("id")));
+        AsciiLogUtils.displayEntitiesViaLogs(
+                companyPage.getContent(),
+                new String[] { "ID", "Name"},
+                c -> new Object[] { c.getId(), c.getName()}
+        );
+
         Assertions.assertThat(companyPage.getTotalElements()).isEqualTo(10);
         Assertions.assertThat(companyPage.getContent()).hasSize(5);
         Assertions.assertThat(companyPage.getTotalPages()).isEqualTo(2);

@@ -33,6 +33,11 @@ class EmployeeServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<EmployeeDto> employeePage = employeeService.list(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(employeePage.getItems(),
+                new String[] { "ID", "First name", "Last name", "Company" },
+                e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompanyName() }
+        );
+
         Assertions.assertThat(employeePage.getTotalItems()).isEqualTo(1000);
         Assertions.assertThat(employeePage.getItems()).hasSize(5);
         Assertions.assertThat(employeePage.getTotalPages()).isEqualTo(200);
@@ -54,6 +59,11 @@ class EmployeeServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<EmployeeDto> employeePage = employeeService.listWithCompany(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(employeePage.getItems(),
+                new String[] { "ID", "First name", "Last name", "Company" },
+                e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompanyName() }
+        );
+
         Assertions.assertThat(employeePage.getTotalItems()).isEqualTo(1000);
         Assertions.assertThat(employeePage.getItems()).hasSize(5);
         Assertions.assertThat(employeePage.getTotalPages()).isEqualTo(200);
@@ -75,6 +85,12 @@ class EmployeeServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<EmployeeDto> employeePage = employeeService.listWithSpecification(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(employeePage.getItems(),
+                new String[] { "ID", "First name", "Last name", "Company" },
+            e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompanyName() }
+        );
+
+
         Assertions.assertThat(employeePage.getTotalItems()).isEqualTo(1000);
         Assertions.assertThat(employeePage.getItems()).hasSize(5);
         Assertions.assertThat(employeePage.getTotalPages()).isEqualTo(200);

@@ -48,6 +48,12 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(
+            companyDtoList.getItems(),
+            new String[] { "ID", "Name", "Employees" },
+            c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
+        );
+
 
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);
@@ -72,6 +78,11 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.listWithFetchViaJQL(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(
+                companyDtoList.getItems(),
+                new String[] { "ID", "Name", "Employees" },
+                c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
+        );
 
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);
@@ -94,6 +105,11 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.listWithFetchViaSpecification(0, pageSize);
+        AsciiLogUtils.displayEntitiesViaLogs(
+                companyDtoList.getItems(),
+                new String[] { "ID", "Name", "Employees" },
+                c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
+        );
 
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);

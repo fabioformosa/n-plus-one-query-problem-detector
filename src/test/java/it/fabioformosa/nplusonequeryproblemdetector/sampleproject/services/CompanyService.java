@@ -24,14 +24,6 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
-    private static void printCompanies(PaginatedListDto<CompanyDto> paginatedListDto) {
-        log.info("######### COMPANIES ({} of {}) ############", paginatedListDto.getItems().size(), paginatedListDto.getTotalItems());
-        paginatedListDto.getItems().stream().forEach(companyDto -> {
-            log.info("{} || {} || #empl. {}", companyDto.getId(), companyDto.getName(), companyDto.getEmployees().size());
-        });
-        log.info("######### /COMPANIES ############");
-    }
-
     public PaginatedListDto<CompanyDto> list(int pageNum, int pageSize){
         Page<Company> companyPage = companyRepository.findAll(PageRequest.of(pageNum, pageSize, Sort.by("id")));
         return Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
@@ -40,14 +32,12 @@ public class CompanyService {
     public PaginatedListDto<CompanyDto> listWithFetchViaJQL(int pageNum, int pageSize){
         Page<Company> companyPage = companyRepository.findPaginatedWithEmployees(PageRequest.of(pageNum, pageSize, Sort.by("id")));
         PaginatedListDto<CompanyDto> paginatedListDto = Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
-        printCompanies(paginatedListDto);
         return paginatedListDto;
     }
 
     public PaginatedListDto<CompanyDto> listWithFetchViaSpecification(int pageNum, int pageSize){
         Page<Company> companyPage = companyRepository.findAll(fetchEmployeesSpecification(), PageRequest.of(pageNum, pageSize, Sort.by("id")));
         PaginatedListDto<CompanyDto> paginatedListDto = Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
-        printCompanies(paginatedListDto);
         return paginatedListDto;
     }
 

@@ -13,6 +13,6 @@ public class CompanyDto {
 
     private String name;
 
-    private List<EmployeeDto> employees;
+    private List<EmployeeDto> employees = List.of();
 
 }
