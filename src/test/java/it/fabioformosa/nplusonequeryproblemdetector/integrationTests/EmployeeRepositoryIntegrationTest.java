@@ -4,6 +4,7 @@ import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Emplo
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.EmployeeRepository;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.EmployeeService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
+import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.hibernate.Session;

@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
+package it.fabioformosa.nplusonequeryproblemdetector.utilities;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -6,7 +6,7 @@ import java.util.List;
 
 @Slf4j
 public class AsciiLogUtils {
-    static <T> void displayEntitiesViaLogs(List<T> entities, String[] headers, java.util.function.Function<T, Object[]> rowMapper) {
+    public static <T> void displayEntitiesViaLogs(List<T> entities, String[] headers, java.util.function.Function<T, Object[]> rowMapper) {
         int[] columnWidths = new int[headers.length];
         for (int i = 0; i < headers.length; i++) {
             columnWidths[i] = headers[i].length();

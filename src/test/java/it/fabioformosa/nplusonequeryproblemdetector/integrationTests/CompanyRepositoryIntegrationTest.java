@@ -3,6 +3,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.CompanyRepository;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
+import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.hibernate.Session;
