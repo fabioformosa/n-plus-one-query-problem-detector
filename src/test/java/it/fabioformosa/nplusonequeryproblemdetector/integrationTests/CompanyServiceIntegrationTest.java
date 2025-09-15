@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * The OneToMany association is affected by the n+1 query problem if we have a list of entities (companies) and for each of them
  * we access to the nested collection (employees). This kind of pattern is common, supposing the need to convert the entities in DTOs.
- * An extra query must be performed for each iteration, resulting in the n+1 query problem.
+ * An extra query must be performed for each iteration, resulting in the n+1 query problem.<br>
  *
  * The solution is to specify a join fetch whenever we know we're going to access to the nested collection
  */
