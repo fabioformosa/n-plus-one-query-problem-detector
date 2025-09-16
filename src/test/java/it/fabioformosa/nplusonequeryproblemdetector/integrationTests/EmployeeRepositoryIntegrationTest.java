@@ -1,14 +1,13 @@
 package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemAssertions;
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Employee;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.EmployeeRepository;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.EmployeeService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
-import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
-import org.hibernate.Session;
-import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,7 +24,7 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private NPlusOneQueryProblemDetector detector;
 
     /**
      * By default, All ManyToOne associations are defined with fetchType=Eager
@@ -33,9 +32,8 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
      */
     @Test
     void givenEmployeesWithAManyToOneAssociationWithCompanies_whenTheFetchTypeIsEager_thenTheNPlus1QueryProblemIsPresent() {
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
+
+        detector.startMonitoring();
 
         int pageSize = 5;
         Page<Employee> paginatedEmployeeList = employeeRepository.findAll(PageRequest.of(0, pageSize, Sort.by("id")));
@@ -44,6 +42,8 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
                 e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompany().getName() }
         );
 
+        detector.stopMonitoring();
+
         Assertions.assertThat(paginatedEmployeeList.getTotalElements()).isEqualTo(1000);
         Assertions.assertThat(paginatedEmployeeList.getContent()).hasSize(pageSize);
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);
@@ -51,10 +51,15 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
         //Assert the association is eager
         Assertions.assertThat(paginatedEmployeeList.getContent().getFirst().getCompany()).isNotNull();
 
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
-
+        int expectedMaxQueries = 2;
+        Assertions.assertThatThrownBy(() ->
+                        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(expectedMaxQueries)
+                ).isInstanceOf(AssertionError.class)
+                .hasMessageContaining("Expected maximum");
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(expectedMaxQueries);
         // !!! n+1 query problem !!!
-        Assertions.assertThat(statistics.getEntityFetchCount()).isEqualTo(pageSize);
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(pageSize);
+
     }
 
     /**
@@ -65,9 +70,8 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
      */
     @Test
     void givenEmployeesWithAManyToOneAssociationWithCompanies_whenTheQueryHasAJoinWithFetch_thenTheNPlus1QueryProblemIsNotPresent(){
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
+
+        detector.startMonitoring();
 
         int pageSize = 5;
         Page<Employee> paginatedEmployeeList = employeeRepository.findAll(EmployeeService.fetchCompanySpecification(), PageRequest.of(0, pageSize, Sort.by("id")));
@@ -76,6 +80,8 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
                 e -> new Object[] { e.getId(), e.getFirstname(), e.getLastname(), e.getCompany().getName() }
         );
 
+        detector.stopMonitoring();
+
         Assertions.assertThat(paginatedEmployeeList.getTotalElements()).isEqualTo(1000);
         Assertions.assertThat(paginatedEmployeeList.getContent()).hasSize(pageSize);
         Assertions.assertThat(paginatedEmployeeList.getTotalPages()).isEqualTo(200);
@@ -83,10 +89,8 @@ class EmployeeRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
         //Assert the association is eager
         Assertions.assertThat(paginatedEmployeeList.getContent().getFirst().getCompany()).isNotNull();
 
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
-
         // OK: n+1 query problem not present
-        Assertions.assertThat(statistics.getEntityFetchCount()).isZero();
+        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
     }
 
 }

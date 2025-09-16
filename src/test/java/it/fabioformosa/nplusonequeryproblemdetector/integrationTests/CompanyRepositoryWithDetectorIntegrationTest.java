@@ -1,13 +1,11 @@
 package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemAssertions;
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.CompanyRepository;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
-import jakarta.persistence.EntityManager;
-import org.assertj.core.api.Assertions;
-import org.hibernate.Session;
-import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,13 +18,13 @@ import org.springframework.data.domain.Sort;
  * This kind of data retrieval is not affected by n+1 query problem because we don't access to the employees, forcing the lazy loading to perform
  * extra queries
  */
-class CompanyRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
+class CompanyRepositoryWithDetectorIntegrationTest extends AbstractIntegrationTestSuite {
 
     @Autowired
     private CompanyRepository companyRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private NPlusOneQueryProblemDetector detector;
 
     /**
      * By default, the OneToMany association is defined with FetchType=Lazy
@@ -34,9 +32,8 @@ class CompanyRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
      */
     @Test
     void givenALazyOneToManyAssociation_whenWeDontAccessToTheNestedCollection_thenTheNPlusQueryProblemDoesntOccur() {
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
+
+        detector.startMonitoring();
 
         Page<Company> companyPage = companyRepository.findAll(PageRequest.of(0, 5, Sort.by("id")));
         AsciiLogUtils.displayEntitiesViaLogs(
@@ -45,13 +42,15 @@ class CompanyRepositoryIntegrationTest extends AbstractIntegrationTestSuite {
                 c -> new Object[] { c.getId(), c.getName()}
         );
 
-        Assertions.assertThat(companyPage.getTotalElements()).isEqualTo(10);
-        Assertions.assertThat(companyPage.getContent()).hasSize(5);
-        Assertions.assertThat(companyPage.getTotalPages()).isEqualTo(2);
+        detector.stopMonitoring();
+
+        org.assertj.core.api.Assertions.assertThat(companyPage.getTotalElements()).isEqualTo(10);
+        org.assertj.core.api.Assertions.assertThat(companyPage.getContent()).hasSize(5);
+        org.assertj.core.api.Assertions.assertThat(companyPage.getTotalPages()).isEqualTo(2);
 
         // OK: n+1 query problem not present
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
-        Assertions.assertThat(statistics.getCollectionFetchCount()).isZero();
+        int expectedMaxQueries = 2;
+        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(expectedMaxQueries);
     }
 
 }

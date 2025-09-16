@@ -1,15 +1,13 @@
 package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
 
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemAssertions;
+import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
-import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
-import org.hibernate.Session;
-import org.hibernate.stat.Statistics;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -20,20 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * The solution is to specify a join fetch whenever we know we're going to access to the nested collection
  */
-class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
+class CompanyServiceWithDetectorIntegrationTest extends AbstractIntegrationTestSuite {
 
     @Autowired
     private CompanyService companyService;
 
     @Autowired
-    private EntityManager entityManager;
-
-    @BeforeEach
-    void clearStatistics(){
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
-    }
+    private NPlusOneQueryProblemDetector detector;
 
     /**
      * By default, the OneToMany association is defined with a fetchType=Lazy.
@@ -44,8 +35,8 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
      */
     @Test
     void givenCompaniesWithAssociationEmployees_whenTheFetchTypeIsLazy_thenTheNPlus1QueryProblemIsPresent(){
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
+
+        detector.startMonitoring();
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, pageSize);
@@ -54,28 +45,30 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
             new String[] { "ID", "Name", "Employees" },
             c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
         );
-
-
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);
         Assertions.assertThat(companyDtoList.getTotalPages()).isEqualTo(2);
 
+        detector.stopMonitoring();
 
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
+        //If the assertion raise an error, it means the n+1 query problem is present
+        Assertions.assertThatThrownBy(() ->
+                NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2)
+            ).isInstanceOf(AssertionError.class)
+             .hasMessageContaining("Expected maximum");
 
-        // !!! n+1 query problem !!!
-        Assertions.assertThat(statistics.getCollectionFetchCount()).isEqualTo(pageSize);
+            NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
+            // !!! n+1 query problem !!!
+            NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(pageSize);
     }
-
 
     /**
      * Specifying a join fetch into the query, the problem explained above is solved!
      */
     @Test
     void givenCompaniesWithAssociationEmployees_whenTheQueryFetchesExplicitlyViaJQL_thenTheNPlus1QueryProblemIsNotPresent(){
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
+
+        detector.startMonitoring();
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.listWithFetchViaJQL(0, pageSize);
@@ -85,14 +78,15 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
                 c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
         );
 
+        detector.stopMonitoring();
+
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);
         Assertions.assertThat(companyDtoList.getTotalPages()).isEqualTo(2);
 
         // OK: n+1 query problem not present
         int expectedQueryCount = 2;
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(expectedQueryCount);
-        Assertions.assertThat(statistics.getCollectionFetchCount()).isZero();
+        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(expectedQueryCount);
     }
 
     /**
@@ -100,9 +94,8 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
      */
     @Test
     void givenCompaniesWithAssociationEmployees_whenTheQueryFetchesExplicitlyViaSpecification_thenTheNPlus1QueryProblemIsNotPresent(){
-        Session session = entityManager.unwrap(Session.class);
-        Statistics statistics = session.getSessionFactory().getStatistics();
-        statistics.clear();
+
+        detector.startMonitoring();
 
         int pageSize = 5;
         PaginatedListDto<CompanyDto> companyDtoList = companyService.listWithFetchViaSpecification(0, pageSize);
@@ -112,13 +105,15 @@ class CompanyServiceIntegrationTest extends AbstractIntegrationTestSuite {
                 c -> new Object[] { c.getId(), c.getName(), c.getEmployees().size() }
         );
 
+        detector.stopMonitoring();
+
         Assertions.assertThat(companyDtoList.getTotalItems()).isEqualTo(10);
         Assertions.assertThat(companyDtoList.getItems()).hasSize(pageSize);
         Assertions.assertThat(companyDtoList.getTotalPages()).isEqualTo(2);
 
         // OK: n+1 query problem not present
-        Assertions.assertThat(statistics.getQueryExecutionCount()).isEqualTo(2);
-        Assertions.assertThat(statistics.getCollectionFetchCount()).isZero();
+        int expectedQueryCount = 2;
+        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(expectedQueryCount);
     }
 
 }
