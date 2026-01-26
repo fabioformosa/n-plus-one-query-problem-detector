@@ -58,6 +58,8 @@ This library provides utilities to detect and assert the presence of the N+1 que
    ```
 
 ## Devlog & Video Series
+[![Watch the video](https://img.youtube.com/vi/nF8DMHj-fmY/maxresdefault.jpg)](https://www.youtube.com/watch?v=nF8DMHj-fmY)
+
 
 This project is documented as a devlog, showing how an idea can turn into a project. Follow the development journey on YouTube:
 
