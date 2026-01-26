@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'it.fabioformosa'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 
 java {
 	toolchain {
@@ -43,4 +43,30 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.register('setVersionRelease') {
+    doLast {
+        def newVersion = project.findProperty('releaseVersion')
+        if (!newVersion) {
+            throw new GradleException("You must provide -PreleaseVersion=<version> when running this task.")
+        }
+        def file = file('build.gradle')
+        def text = file.text.replaceAll(/version = '.*?'/, "version = '${newVersion}'")
+        file.text = text
+        println "Set version to ${newVersion}"
+    }
+}
+
+tasks.register('setVersionSnapshot') {
+    doLast {
+        def newVersion = project.findProperty('snapshotVersion')
+        if (!newVersion) {
+            throw new GradleException("You must provide -PsnapshotVersion=<version> when running this task.")
+        }
+        def file = file('build.gradle')
+        def text = file.text.replaceAll(/version = '.*?'/, "version = '${newVersion}'")
+        file.text = text
+        println "Set version to ${newVersion}"
+    }
 }
