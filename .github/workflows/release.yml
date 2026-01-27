@@ -37,14 +37,11 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_SECRET_KEY_PASSWORD }}
         run: |
           ./gradlew clean build publish --no-daemon --stacktrace \
-            -PossrhUsername=$MAVEN_CENTRAL_USERNAME \
-            -PossrhPassword=$MAVEN_CENTRAL_PASSWORD \
-            -Psigning.key=$GPG_PRIVATE_KEY \
-            -Psigning.password=$GPG_PASSPHRASE
+            -PossrhUsername="$MAVEN_CENTRAL_USERNAME" \
+            -PossrhPassword="$MAVEN_CENTRAL_PASSWORD"
 
       - name: Archive built artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts
           path: build/libs/*.jar
-
