@@ -124,5 +124,15 @@ signing {
 		useInMemoryPgpKeys(keyObj.toString(), passObj?.toString())
 	}
 
-	sign publishing.publications['mavenJava']
+	sign publishing.publications.named('mavenJava').get()
+}
+
+// Disable the Spring Boot fat jar (bootJar) since this project is a library and
+// the main application class lives under test sources. Re-enable the plain jar.
+tasks.named('bootJar') {
+	enabled = false
+}
+
+tasks.named('jar') {
+	enabled = true
 }
