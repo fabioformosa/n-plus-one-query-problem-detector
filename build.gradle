@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'maven-publish'
+	id 'signing'
 }
 
 group = 'it.fabioformosa'
@@ -69,4 +71,58 @@ tasks.register('setVersionSnapshot') {
         file.text = text
         println "Set version to ${newVersion}"
     }
+}
+
+// Add publishing configuration so the `publish` task exists and can deploy to OSSRH/Maven Central.
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			pom {
+				name = 'n-plus-one-query-problem-detector'
+				description = 'Detect N+1 query problems in JPA/Hibernate'
+				url = 'https://github.com/fabioformosa/n-plus-one-query-problem-detector'
+				licenses {
+					license {
+						name = 'The Apache License, Version 2.0'
+						url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+					}
+				}
+				developers {
+					developer {
+						id = 'fabioformosa'
+						name = 'Fabio Formosa'
+						email = 'fabio@example.com'
+					}
+				}
+				scm {
+					connection = 'scm:git:git://github.com/fabioformosa/n-plus-one-query-problem-detector.git'
+					developerConnection = 'scm:git:ssh://github.com:fabioformosa/n-plus-one-query-problem-detector.git'
+					url = 'https://github.com/fabioformosa/n-plus-one-query-problem-detector'
+				}
+			}
+		}
+	}
+
+	repositories {
+		maven {
+			name = 'sonatype'
+			url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
+			credentials {
+				username = project.findProperty('ossrhUsername') ?: System.getenv('MAVEN_CENTRAL_USERNAME')
+				password = project.findProperty('ossrhPassword') ?: System.getenv('MAVEN_CENTRAL_PASSWORD')
+			}
+		}
+	}
+}
+
+signing {
+	doFirst {
+		def key = project.findProperty('signing.key') ?: System.getenv('GPG_PRIVATE_KEY')
+		def pass = project.findProperty('signing.password') ?: System.getenv('GPG_PASSPHRASE')
+		if (key) {
+			useInMemoryPgpKeys(key, pass)
+		}
+	}
+	sign publishing.publications.mavenJava
 }
