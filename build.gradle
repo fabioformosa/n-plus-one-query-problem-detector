@@ -117,12 +117,12 @@ publishing {
 }
 
 signing {
-	doFirst {
-		def key = project.findProperty('signing.key') ?: System.getenv('GPG_PRIVATE_KEY')
-		def pass = project.findProperty('signing.password') ?: System.getenv('GPG_PASSPHRASE')
-		if (key) {
-			useInMemoryPgpKeys(key, pass)
-		}
+	// Read signing key/password from project properties or environment variables at configuration time.
+	def key = project.findProperty('signing.key') ?: System.getenv('GPG_PRIVATE_KEY')
+	def pass = project.findProperty('signing.password') ?: System.getenv('GPG_PASSPHRASE')
+	if (key) {
+		useInMemoryPgpKeys(key, pass)
 	}
+
 	sign publishing.publications.mavenJava
 }
