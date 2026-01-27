@@ -26,6 +26,7 @@ repositories {
 }
 
 dependencies {
+	implementation platform('org.springframework.boot:spring-boot-dependencies:3.5.3')
 	implementation 'org.springframework.boot:spring-boot-starter'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -135,4 +136,11 @@ tasks.named('bootJar') {
 
 tasks.named('jar') {
 	enabled = true
+}
+
+// Suppress the 'dependencies-without-versions' validation when generating module metadata.
+// This is safe here because dependency versions are provided by the Spring Boot dependency-management BOM.
+// Some Gradle versions don't expose the suppressedValidations setter/getter on the task; disable the task instead.
+tasks.withType(GenerateModuleMetadata).configureEach {
+	enabled = false
 }
