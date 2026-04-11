@@ -106,14 +106,31 @@ publishing {
 	}
 
 	repositories {
-		maven {
-			name = 'sonatype'
-			url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
-			credentials {
-				username = project.findProperty('ossrhUsername') ?: System.getenv('MAVEN_CENTRAL_USERNAME')
-				password = project.findProperty('ossrhPassword') ?: System.getenv('MAVEN_CENTRAL_PASSWORD')
+			maven {
+				name = 'sonatype'
+				url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
+
+				// Support Sonatype token-based authentication (preferred) via project property
+				// `-PossrhToken=<token>` or environment variables `SONATYPE_TOKEN` / `OSSRH_TOKEN`.
+				// Fall back to username/password using `ossrhUsername`/`ossrhPassword` or
+				// environment variables `MAVEN_CENTRAL_USERNAME` / `MAVEN_CENTRAL_PASSWORD`.
+				def token = project.findProperty('ossrhToken') ?: System.getenv('SONATYPE_TOKEN') ?: System.getenv('OSSRH_TOKEN')
+				if (token) {
+					// Use HTTP header authentication: Authorization: Bearer <token>
+					authentication {
+						create("header", org.gradle.api.artifacts.repositories.HttpHeaderAuthentication)
+					}
+					credentials(org.gradle.api.artifacts.repositories.HttpHeaderCredentials) {
+						name = 'Authorization'
+						value = "Bearer ${token}"
+					}
+				} else {
+					credentials {
+						username = project.findProperty('ossrhUsername') ?: System.getenv('MAVEN_CENTRAL_USERNAME')
+						password = project.findProperty('ossrhPassword') ?: System.getenv('MAVEN_CENTRAL_PASSWORD')
+					}
+				}
 			}
-		}
 	}
 }
 
