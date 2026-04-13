@@ -108,7 +108,9 @@ publishing {
 	repositories {
 			maven {
 				name = 'sonatype'
-				url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
+				// OSSRH was sunset on 2025-06-30. Publish through the Central Portal
+				// compatibility endpoint when using Gradle's built-in maven-publish plugin.
+				url = uri('https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/')
 
 				// Support Sonatype token-based authentication (preferred) via project property
 				// `-PossrhToken=<token>` or environment variables `SONATYPE_TOKEN` / `OSSRH_TOKEN`.
