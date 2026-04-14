@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'it.fabioformosa'
-version = '0.0.10'
+version = file('VERSION').text.trim()
 
 java {
 	toolchain {
@@ -54,10 +54,10 @@ tasks.register('setVersionRelease') {
         if (!newVersion) {
             throw new GradleException("You must provide -PreleaseVersion=<version> when running this task.")
         }
-        def file = file('build.gradle')
-        def text = file.text.replaceAll(/version = '.*?'/, "version = '${newVersion}'")
-        file.text = text
-        println "Set version to ${newVersion}"
+        // Persist the release version into the VERSION file instead of editing build.gradle
+        def file = file('VERSION')
+        file.text = "${newVersion}\n"
+        println "Set version to ${newVersion} (written to VERSION)"
     }
 }
 
@@ -67,10 +67,10 @@ tasks.register('setVersionSnapshot') {
         if (!newVersion) {
             throw new GradleException("You must provide -PsnapshotVersion=<version> when running this task.")
         }
-        def file = file('build.gradle')
-        def text = file.text.replaceAll(/version = '.*?'/, "version = '${newVersion}'")
-        file.text = text
-        println "Set version to ${newVersion}"
+        // Persist the snapshot version into the VERSION file instead of editing build.gradle
+        def file = file('VERSION')
+        file.text = "${newVersion}\n"
+        println "Set version to ${newVersion} (written to VERSION)"
     }
 }
 
