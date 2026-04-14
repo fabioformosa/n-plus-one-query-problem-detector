@@ -5,7 +5,7 @@
 ## Unreleased
 - Coming Soon
 
-## 0.0.2 & 0.0.3
+## 0.0.2 - 0.0.10
 -  `FIX` fixed the CICD pipeline to properly create releases on GitHub.
 
 ## 0.0.1
