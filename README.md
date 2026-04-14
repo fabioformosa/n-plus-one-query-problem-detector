@@ -1,3 +1,5 @@
+![https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml](https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml/badge.svg)
+
 # N+1 Query Problem Detector
 
 A Spring Java testing library for detecting the N+1 query problem in Hibernate-based applications.
