@@ -30,7 +30,6 @@ This library provides utilities to detect and assert the presence of the N+1 que
      ```groovy
      testImplementation 'it.fabioformosa:n-plus-one-query-problem-detector:REPLACE_WITH_LATEST_VERSION'
      ```
-   - **Currently:** The library is not yet on Maven Central. Clone this repository and run `./gradlew publishToMavenLocal` to install it locally, then use the dependency as above.
 
 2. **Enable Hibernate statistics**
    - In your `application.properties` (test profile):
