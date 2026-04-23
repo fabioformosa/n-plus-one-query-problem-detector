@@ -1,4 +1,8 @@
 ![https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml](https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml/badge.svg) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=coverage)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=bugs)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 
 # N+1 Query Problem Detector
 
