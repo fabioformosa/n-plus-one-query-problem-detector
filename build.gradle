@@ -39,6 +39,7 @@ dependencies {
 
 	// Only for your own tests, not exported to consumers
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.junit.platform:junit-platform-testkit'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	testImplementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.testcontainers:junit-jupiter'
@@ -60,6 +61,7 @@ sonar {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	exclude '**/CompanyServiceWithJUnitExtensionIntegrationTest$FailingExpectMaxQueriesCase.class'
 	finalizedBy tasks.named('jacocoTestReport')
 }
 

@@ -1,14 +1,10 @@
 package it.fabioformosa.nplusonequeryproblemdetector.integrationTests.junitextension;
 
-import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectCollectionFetchCount;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectQueryExecutionCount;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemTestDetector;
-import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
-import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.repos.CompanyRepository;
-import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
 import org.assertj.core.api.Assertions;
