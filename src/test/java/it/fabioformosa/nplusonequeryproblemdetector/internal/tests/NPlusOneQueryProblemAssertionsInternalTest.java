@@ -11,6 +11,9 @@ import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.Compa
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.EmployeeService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AsciiLogUtils;
+import jakarta.persistence.EntityManager;
+import org.hibernate.Session;
+import org.hibernate.stat.Statistics;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +34,9 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
 
     @Autowired
     private NPlusOneQueryProblemDetector detector;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     void givenLazyCollectionsAreFetched_whenMaxQueriesIsTooLow_thenAssertionErrorIsRaised() {
@@ -90,5 +96,31 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
                 .hasMessageContaining("Expected maximum");
         NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
         NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(pageSize);
+    }
+
+    @Test
+    void givenHibernateStatisticsAreDisabled_whenDetectorMonitors_thenStatisticsAreTemporarilyEnabledAndRestored() {
+        Statistics statistics = getSessionStatistics();
+        boolean statisticsEnabledBeforeTest = statistics.isStatisticsEnabled();
+
+        try {
+            statistics.setStatisticsEnabled(false);
+
+            detector.startMonitoring();
+            try {
+                Assertions.assertThat(statistics.isStatisticsEnabled()).isTrue();
+            } finally {
+                detector.stopMonitoring();
+            }
+
+            Assertions.assertThat(statistics.isStatisticsEnabled()).isFalse();
+        } finally {
+            statistics.setStatisticsEnabled(statisticsEnabledBeforeTest);
+        }
+    }
+
+    private Statistics getSessionStatistics() {
+        Session session = entityManager.unwrap(Session.class);
+        return session.getSessionFactory().getStatistics();
     }
 }

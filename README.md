@@ -37,13 +37,7 @@ This library provides utilities to detect and assert the presence of the N+1 que
      testImplementation 'it.fabioformosa:n-plus-one-query-problem-detector:REPLACE_WITH_LATEST_VERSION'
      ```
 
-2. **Enable Hibernate statistics**
-   - In your `application.properties` (test profile):
-     ```properties
-     spring.jpa.properties.hibernate.generate_statistics=true
-     ```
-
-3. **Write your test with the JUnit extension**
+2. **Write your test with the JUnit extension**
    - This is the simplest way to use the library: annotate the test class with `@ExtendWith(NPlusOneQueryProblemDetectorExtension.class)` and declare expectations on the test method.
 
    ```java
@@ -70,6 +64,10 @@ This library provides utilities to detect and assert the presence of the N+1 que
    ```
 
 ## Testing Library Usage
+
+The detector enables Hibernate statistics automatically when monitoring starts. You do not need to set `spring.jpa.properties.hibernate.generate_statistics=true` in your test configuration.
+
+The library deliberately resets Hibernate statistics when monitoring starts and stops, so the assertions only see the monitored test slice. Hibernate statistics belong to the whole `SessionFactory`; avoid sharing the same persistence context across parallel tests that also inspect or rely on Hibernate statistics.
 
 ### JUnit Extension With Annotations
 

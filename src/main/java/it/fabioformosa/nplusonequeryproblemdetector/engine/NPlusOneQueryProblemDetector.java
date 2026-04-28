@@ -15,9 +15,12 @@ public class NPlusOneQueryProblemDetector {
 
     private HibernateStatsSnapshot startSnapshot;
     private HibernateStatsSnapshot endSnapshot;
+    private boolean statisticsEnabledBeforeMonitoring;
 
     public void startMonitoring() {
         Statistics statistics = getSessionStatistics();
+        statisticsEnabledBeforeMonitoring = statistics.isStatisticsEnabled();
+        statistics.setStatisticsEnabled(true);
         statistics.clear();
         startSnapshot = takeStatsSnapshot(statistics);
     }
@@ -26,6 +29,7 @@ public class NPlusOneQueryProblemDetector {
         Statistics statistics = getSessionStatistics();
         endSnapshot = takeStatsSnapshot(statistics);
         statistics.clear();
+        statistics.setStatisticsEnabled(statisticsEnabledBeforeMonitoring);
     }
 
     private Statistics getSessionStatistics() {

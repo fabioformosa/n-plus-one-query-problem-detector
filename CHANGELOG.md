@@ -3,6 +3,9 @@
 ## Unreleased
 - Coming Soon
 
+## 0.2.0
+- `NEW FEATURE` The hibernate statistics are now enabled automatically when monitoring starts, so you do not need to set `spring.jpa.properties.hibernate.generate_statistics=true` in your test configuration.
+
 ## 0.1.0
 - `NEW FEATURE` Added a JUnit 5 extension to start and stop monitoring automatically around test methods.
 - `NEW FEATURE` Added assertion annotations for max queries, query execution count, entity fetch count, and collection fetch count.
