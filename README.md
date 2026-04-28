@@ -44,11 +44,27 @@ This library provides utilities to detect and assert the presence of the N+1 que
      ```
 
 3. **Write your test**
-   - Inject `NPlusOneQueryProblemDetector` into your test class.
-   - Use `startMonitoring()` and `stopMonitoring()` to bracket the code you want to monitor.
-   - Use the assertion utilities to check for N+1 problems.
+   - Use the JUnit extension and annotations when you want the detector to start and stop automatically around a test method.
+   - Inject `NPlusOneQueryProblemDetector` and use explicit assertions when you need to monitor only a smaller block inside the test method.
 
-   Example:
+   Annotation-driven example:
+   ```java
+   @SpringBootTest
+   @ExtendWith(NPlusOneQueryProblemTestDetector.class)
+   class CompanyServiceTest {
+
+       @Autowired
+       private CompanyService companyService;
+
+       @Test
+       @ExpectMaxQueries(5)
+       void listCompaniesWithoutNPlusOneQueries() {
+           companyService.list(0, 5);
+       }
+   }
+   ```
+
+   Manual example:
    ```java
    @Autowired
    private NPlusOneQueryProblemDetector detector;
@@ -58,9 +74,31 @@ This library provides utilities to detect and assert the presence of the N+1 que
        detector.startMonitoring();
        // ... your code that may trigger N+1 ...
        detector.stopMonitoring();
-       NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
+        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
    }
    ```
+
+## Assertions
+
+Use `@ExpectMaxQueries(max)` or `hasCountedMaxQueries(max)` as the broad guard for a use case. It fails when the monitored Hibernate statistics exceed the maximum total query count, including query executions, entity fetches, collection fetches, and second-level cache hits.
+
+Use `@ExpectQueryExecutionCount(count)` or `queryExecutionCountIsEqualTo(count)` when you want the exact number of executed queries, for example a paginated repository call that should run only the content query and count query.
+
+Use `@ExpectEntityFetchCount(count)` or `entityFetchCountIsEqualTo(count)` when you want to detect lazy entity fetches, commonly in many-to-one or one-to-one relationships.
+
+Use `@ExpectCollectionFetchCount(count)` or `collectionFetchCountIsEqualTo(count)` when you want to detect lazy collection fetches, commonly in one-to-many relationships where accessing a nested collection can reveal an N+1 problem.
+
+You can combine annotations on the same test when you want both a high-level query budget and precise Hibernate statistic expectations:
+
+```java
+@Test
+@ExpectMaxQueries(7)
+@ExpectQueryExecutionCount(2)
+@ExpectCollectionFetchCount(5)
+void listCompaniesAndFetchEmployees() {
+    companyService.list(0, 5);
+}
+```
 
 ## Devlog & Video Series
 [![Watch the video](https://img.youtube.com/vi/nF8DMHj-fmY/maxresdefault.jpg)](https://www.youtube.com/watch?v=nF8DMHj-fmY)

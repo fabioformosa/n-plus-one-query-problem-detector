@@ -44,7 +44,7 @@ public class NPlusOneQueryProblemAssertions {
             this.stats = stats;
         }
 
-        public void queryExecutionCountIsEqualTo(int expectedCount) {
+        public void queryExecutionCountIsEqualTo(long expectedCount) {
             if (stats.getQueryExecutionCount() != expectedCount) {
                 throw new AssertionError(String.format(
                         "Expected query execution count to be %d, but was %d",
@@ -53,7 +53,7 @@ public class NPlusOneQueryProblemAssertions {
 
         }
 
-        public void collectionFetchCountIsEqualTo(int expectedCount) {
+        public void collectionFetchCountIsEqualTo(long expectedCount) {
             if (stats.getCollectionFetchCount() != expectedCount) {
                 throw new AssertionError(String.format(
                         "Expected collection fetch count to be %d, but was %d",
@@ -62,7 +62,7 @@ public class NPlusOneQueryProblemAssertions {
 
         }
 
-        public void entityFetchCountIsEqualTo(int expectedCount) {
+        public void entityFetchCountIsEqualTo(long expectedCount) {
             if (stats.getEntityFetchCount() != expectedCount) {
                 throw new AssertionError(String.format(
                         "Expected entity fetch count to be %d, but was %d",
