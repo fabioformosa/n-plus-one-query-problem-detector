@@ -31,7 +31,9 @@ class CompanyServiceWithDetectorIntegrationTest extends AbstractIntegrationTestS
      * In the service we iterate over the companies and we access to the related nested collection of employees
      * to convert into DTOs.
      * If we forget to specify explicitly a fetch join in the query, an extra query is done for each company
-     * to load the associated employees
+     * to load the associated employees.
+     * The total number of queries executed is: 7 (1 for fetching the first page of companies + 1 for the count + 5 for fetching the employees of each company)
+     * => n+1 query problem is present
      */
     @Test
     void givenCompaniesWithAssociationEmployees_whenTheFetchTypeIsLazy_thenTheNPlus1QueryProblemIsPresent(){
@@ -53,13 +55,13 @@ class CompanyServiceWithDetectorIntegrationTest extends AbstractIntegrationTestS
 
         //If the assertion raise an error, it means the n+1 query problem is present
         Assertions.assertThatThrownBy(() ->
-                NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2)
+                NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2) //actually counted 7 queries: 1 for fetching the first page of companies + 1 for the count + 5 for fetching the employees of each company
             ).isInstanceOf(AssertionError.class)
              .hasMessageContaining("Expected maximum");
 
-            NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
-            // !!! n+1 query problem !!!
-            NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(pageSize);
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
+        // !!! n+1 query problem !!!
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(pageSize);
     }
 
     /**

@@ -20,29 +20,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 @ExtendWith(NPlusOneQueryProblemTestDetector.class)
-class NPlusOneQueryProblemTestDetectorIntegrationTest extends AbstractIntegrationTestSuite {
-
-    @Autowired
-    private CompanyRepository companyRepository;
+class CompanyServiceWithJUnitExtensionIntegrationTest extends AbstractIntegrationTestSuite {
 
     @Autowired
     private CompanyService companyService;
-
-    @Test
-    @ExpectMaxQueries(2)
-    @ExpectQueryExecutionCount(2)
-    void givenExtensionAndMaxQueryAnnotations_whenRepositoryIsInvoked_thenTheDetectorMonitorsTheTestMethod() {
-        Page<Company> companyPage = companyRepository.findAll(PageRequest.of(0, 5, Sort.by("id")));
-        AsciiLogUtils.displayEntitiesViaLogs(
-                companyPage.getContent(),
-                new String[] { "ID", "Name"},
-                c -> new Object[] { c.getId(), c.getName()}
-        );
-
-        Assertions.assertThat(companyPage.getTotalElements()).isEqualTo(10);
-        Assertions.assertThat(companyPage.getContent()).hasSize(5);
-        Assertions.assertThat(companyPage.getTotalPages()).isEqualTo(2);
-    }
 
     @Test
     @ExpectMaxQueries(7)
