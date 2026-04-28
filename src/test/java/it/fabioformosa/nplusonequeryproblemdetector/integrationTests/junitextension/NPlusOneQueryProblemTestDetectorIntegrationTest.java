@@ -1,9 +1,9 @@
-package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
+package it.fabioformosa.nplusonequeryproblemdetector.integrationTests.junitextension;
 
-import it.fabioformosa.nplusonequeryproblemdetector.ExpectCollectionFetchCount;
-import it.fabioformosa.nplusonequeryproblemdetector.ExpectMaxQueries;
-import it.fabioformosa.nplusonequeryproblemdetector.ExpectQueryExecutionCount;
-import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemTestDetector;
+import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectCollectionFetchCount;
+import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
+import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectQueryExecutionCount;
+import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemTestDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company;

@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.junitextension;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

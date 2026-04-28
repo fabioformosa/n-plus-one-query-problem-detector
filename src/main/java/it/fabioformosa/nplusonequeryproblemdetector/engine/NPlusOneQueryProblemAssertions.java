@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.engine;
 
 public class NPlusOneQueryProblemAssertions {
 

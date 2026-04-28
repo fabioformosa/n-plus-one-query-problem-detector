@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.engine;
 
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;

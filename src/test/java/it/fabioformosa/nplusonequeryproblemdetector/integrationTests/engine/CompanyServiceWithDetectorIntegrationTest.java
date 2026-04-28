@@ -1,7 +1,7 @@
-package it.fabioformosa.nplusonequeryproblemdetector.integrationTests;
+package it.fabioformosa.nplusonequeryproblemdetector.integrationTests.engine;
 
-import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemAssertions;
-import it.fabioformosa.nplusonequeryproblemdetector.NPlusOneQueryProblemDetector;
+import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemAssertions;
+import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;

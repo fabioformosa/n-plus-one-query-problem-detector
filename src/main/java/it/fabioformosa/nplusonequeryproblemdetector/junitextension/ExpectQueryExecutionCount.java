@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.junitextension;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ExpectMaxQueries {
+public @interface ExpectQueryExecutionCount {
     long value();
 }

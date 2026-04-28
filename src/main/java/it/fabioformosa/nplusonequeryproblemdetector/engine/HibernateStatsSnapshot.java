@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector;
+package it.fabioformosa.nplusonequeryproblemdetector.engine;
 
 import lombok.Builder;
 import lombok.Data;
