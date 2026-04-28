@@ -9,27 +9,33 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.Method;
 
-public class NPlusOneQueryProblemTestDetector implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
+public class NPlusOneQueryProblemDetectorExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
     @Override
     public void beforeTestExecution(ExtensionContext context) {
-        getDetector(context).startMonitoring();
+        NPlusOneQueryProblemDetector detector = getDetector(context);
+        NPlusOneQueryDetectorContext.setCurrentDetector(detector);
+        detector.startMonitoring();
     }
 
     @Override
     public void afterTestExecution(ExtensionContext context) {
         NPlusOneQueryProblemDetector detector = getDetector(context);
-        detector.stopMonitoring();
+        try {
+            detector.stopMonitoring();
 
-        if (context.getExecutionException().isPresent()) {
-            return;
+            if (context.getExecutionException().isPresent()) {
+                return;
+            }
+
+            Method testMethod = context.getRequiredTestMethod();
+            assertMaxQueriesIfExpected(detector, testMethod);
+            assertQueryExecutionCountIfExpected(detector, testMethod);
+            assertEntityFetchCountIfExpected(detector, testMethod);
+            assertCollectionFetchCountIfExpected(detector, testMethod);
+        } finally {
+            NPlusOneQueryDetectorContext.clear();
         }
-
-        Method testMethod = context.getRequiredTestMethod();
-        assertMaxQueriesIfExpected(detector, testMethod);
-        assertQueryExecutionCountIfExpected(detector, testMethod);
-        assertEntityFetchCountIfExpected(detector, testMethod);
-        assertCollectionFetchCountIfExpected(detector, testMethod);
     }
 
     private NPlusOneQueryProblemDetector getDetector(ExtensionContext context) {

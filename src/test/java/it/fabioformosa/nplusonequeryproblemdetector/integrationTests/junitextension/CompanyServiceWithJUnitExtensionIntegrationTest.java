@@ -3,7 +3,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.integrationTests.junitexten
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectCollectionFetchCount;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectQueryExecutionCount;
-import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemTestDetector;
+import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemDetectorExtension;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;
@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
-@ExtendWith(NPlusOneQueryProblemTestDetector.class)
+@ExtendWith(NPlusOneQueryProblemDetectorExtension.class)
 class CompanyServiceWithJUnitExtensionIntegrationTest extends AbstractIntegrationTestSuite {
 
     @Autowired
@@ -59,7 +59,7 @@ class CompanyServiceWithJUnitExtensionIntegrationTest extends AbstractIntegratio
                         .isPresent());
     }
 
-    @ExtendWith(NPlusOneQueryProblemTestDetector.class)
+    @ExtendWith(NPlusOneQueryProblemDetectorExtension.class)
     static class FailingExpectMaxQueriesCase extends AbstractIntegrationTestSuite {
 
         @Autowired

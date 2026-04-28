@@ -20,7 +20,7 @@ This library provides utilities to detect and assert the presence of the N+1 que
 - Assert the number of queries executed
 - Fail tests if the N+1 problem is detected
 
-## How to Use
+## Get Started
 
 1. **Add the library to your project**
    - When available on Maven Central, add the following dependency to your `pom.xml`:
@@ -43,52 +43,102 @@ This library provides utilities to detect and assert the presence of the N+1 que
      spring.jpa.properties.hibernate.generate_statistics=true
      ```
 
-3. **Write your test**
-   - Use the JUnit extension and annotations when you want the detector to start and stop automatically around a test method.
-   - Inject `NPlusOneQueryProblemDetector` and use explicit assertions when you need to monitor only a smaller block inside the test method.
+3. **Write your test with the JUnit extension**
+   - This is the simplest way to use the library: annotate the test class with `@ExtendWith(NPlusOneQueryProblemDetectorExtension.class)` and declare expectations on the test method.
 
-   Annotation-driven example:
    ```java
+   import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
+   import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemDetectorExtension;
+   import org.junit.jupiter.api.Test;
+   import org.junit.jupiter.api.extension.ExtendWith;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+
    @SpringBootTest
-   @ExtendWith(NPlusOneQueryProblemTestDetector.class)
+   @ExtendWith(NPlusOneQueryProblemDetectorExtension.class)
    class CompanyServiceTest {
 
        @Autowired
        private CompanyService companyService;
 
        @Test
-       @ExpectMaxQueries(5)
+       @ExpectMaxQueries(1)
        void listCompaniesWithoutNPlusOneQueries() {
            companyService.list(0, 5);
        }
    }
    ```
 
-   Manual example:
-   ```java
-   @Autowired
-   private NPlusOneQueryProblemDetector detector;
+## Testing Library Usage
 
-   @Test
-   void testNPlusOne() {
-       detector.startMonitoring();
-       // ... your code that may trigger N+1 ...
-       detector.stopMonitoring();
-        NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
-   }
-   ```
+### JUnit Extension With Annotations
 
-## Assertions
+Use the JUnit extension when you want the detector to start before the test method and stop after the test method automatically. This avoids injecting `NPlusOneQueryProblemDetector` only to bracket the test logic.
 
-Use `@ExpectMaxQueries(max)` or `hasCountedMaxQueries(max)` as the broad guard for a use case. It fails when the monitored Hibernate statistics exceed the maximum total query count, including query executions, entity fetches, collection fetches, and second-level cache hits.
+```java
+@SpringBootTest
+@ExtendWith(NPlusOneQueryProblemDetectorExtension.class)
+class CompanyServiceTest {
 
-Use `@ExpectQueryExecutionCount(count)` or `queryExecutionCountIsEqualTo(count)` when you want the exact number of executed queries, for example a paginated repository call that should run only the content query and count query.
+    @Autowired
+    private CompanyService companyService;
 
-Use `@ExpectEntityFetchCount(count)` or `entityFetchCountIsEqualTo(count)` when you want to detect lazy entity fetches, commonly in many-to-one or one-to-one relationships.
+    @Test
+    @ExpectMaxQueries(1)
+    void listCompaniesAndFetchEmployees() {
+        companyService.list(0, 5);
+    }
+}
+```
 
-Use `@ExpectCollectionFetchCount(count)` or `collectionFetchCountIsEqualTo(count)` when you want to detect lazy collection fetches, commonly in one-to-many relationships where accessing a nested collection can reveal an N+1 problem.
+Queries executed in `@BeforeEach` are not counted because the extension starts monitoring immediately before the test method body. Queries executed at the beginning of the test method are counted.
 
-You can combine annotations on the same test when you want both a high-level query budget and precise Hibernate statistic expectations:
+If the test method needs arrangement queries before the business logic under test, restart monitoring after the arrangement:
+
+```java
+@Test
+@ExpectMaxQueries(1)
+void listCompaniesWithoutCountingArrangementQueries() {
+    companyRepository.save(CompanyBuilder.build()); // arrangement, initially counted
+
+    NPlusOneQueryMonitoring.restart();
+
+    companyService.list(0, 5); // only this part is asserted
+}
+```
+
+`NPlusOneQueryMonitoring.restart()` can be used only inside a test executed with `NPlusOneQueryProblemDetectorExtension`.
+
+### Manual Detector Usage
+
+Inject `NPlusOneQueryProblemDetector` when you need full control over the monitoring boundaries or when you prefer explicit assertion calls.
+
+```java
+@Autowired
+private NPlusOneQueryProblemDetector detector;
+
+@Test
+void testNPlusOne() {
+    prepareData();
+
+    detector.startMonitoring();
+    companyService.list(0, 5);
+    detector.stopMonitoring();
+
+    NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
+}
+```
+
+### Assertions Deep Dive
+
+| Annotation-style | Assertion-style | Description |
+| --- | --- | --- |
+| `@ExpectMaxQueries(max)` | `NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(max)` | Broad query budget for the monitored use case. It fails when total monitored Hibernate stats exceed `max`, including query executions, entity fetches, collection fetches, and second-level cache hits. |
+| `@ExpectQueryExecutionCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(count)` | Exact number of executed queries. Useful for repository calls that should run a fixed number of queries, such as a paginated content query plus count query. |
+| `@ExpectEntityFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(count)` | Exact number of lazy entity fetches. Useful for detecting many-to-one or one-to-one lazy loading patterns. |
+| `@ExpectCollectionFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(count)` | Exact number of lazy collection fetches. Useful for detecting one-to-many N+1 patterns when accessing nested collections. |
+
+You can combine annotation-style assertions on the same test when you want both a high-level query budget and precise Hibernate statistic expectations:
 
 ```java
 @Test
@@ -98,6 +148,18 @@ You can combine annotations on the same test when you want both a high-level que
 void listCompaniesAndFetchEmployees() {
     companyService.list(0, 5);
 }
+```
+
+You can use the equivalent assertion-style APIs when the detector is injected manually:
+
+```java
+detector.startMonitoring();
+companyService.list(0, 5);
+detector.stopMonitoring();
+
+NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(7);
+NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
+NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(5);
 ```
 
 ## Devlog & Video Series
