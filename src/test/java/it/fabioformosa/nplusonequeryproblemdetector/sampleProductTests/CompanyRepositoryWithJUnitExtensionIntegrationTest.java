@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.integrationTests.junitextension;
+package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests;
 
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectQueryExecutionCount;
@@ -43,7 +43,6 @@ class CompanyRepositoryWithJUnitExtensionIntegrationTest extends AbstractIntegra
     @ExpectQueryExecutionCount(2)
     void givenArrangementQueries_whenMonitoringIsRestarted_thenOnlyTheBusinessLogicQueriesAreCounted() {
 
-        // it simulates in the test arrangement part, the developer performs queries that must not be counted as business logic queries
         Page<Company> arrangementPage = companyRepository.findAll(PageRequest.of(0, 5, Sort.by("id")));
         Assertions.assertThat(arrangementPage.getContent()).hasSize(5);
 
@@ -60,5 +59,4 @@ class CompanyRepositoryWithJUnitExtensionIntegrationTest extends AbstractIntegra
         Assertions.assertThat(companyPage.getContent()).hasSize(5);
         Assertions.assertThat(companyPage.getTotalPages()).isEqualTo(2);
     }
-
 }

@@ -61,7 +61,7 @@ sonar {
 
 tasks.named('test') {
 	useJUnitPlatform()
-	exclude '**/CompanyServiceWithJUnitExtensionIntegrationTest$FailingExpectMaxQueriesCase.class'
+	exclude '**/NPlusOneQueryProblemDetectorExtensionInternalTest$FailingExpectMaxQueriesCase.class'
 	finalizedBy tasks.named('jacocoTestReport')
 }
 
