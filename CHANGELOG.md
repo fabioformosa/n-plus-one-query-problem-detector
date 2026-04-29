@@ -3,6 +3,9 @@
 ## Unreleased
 - Coming Soon
 
+## 0.2.2
+- `FIX` the build phase including javaSource and javaDoc
+
 ## 0.2.1
 - `FIX` improved the transitive dependency management to avoid conflicts with other libraries that depend on Hibernate, such as Spring Data JPA and tested with Spring Boot 4.0.6 also
 
