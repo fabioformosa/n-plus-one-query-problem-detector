@@ -3,6 +3,9 @@
 ## Unreleased
 - Coming Soon
 
+## 0.2.1
+- `FIX` improved the transitive dependency management to avoid conflicts with other libraries that depend on Hibernate, such as Spring Data JPA and tested with Spring Boot 4.0.6 also
+
 ## 0.2.0
 - `NEW FEATURE` The hibernate statistics are now enabled automatically when monitoring starts, so you do not need to set `spring.jpa.properties.hibernate.generate_statistics=true` in your test configuration.
 
