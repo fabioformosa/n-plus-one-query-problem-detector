@@ -8,6 +8,8 @@
 
 A Spring Java testing library for detecting the N+1 query problem in Hibernate-based applications.
 
+Compatibility: this library is compatible with Spring Boot 3.5.x and Spring Boot 4.x.
+
 ## What's the N+1 Query Problem?
 
 The N+1 query problem is a common performance issue in ORM frameworks like Hibernate. It occurs when an application executes one query to fetch a list of entities (the "1"), and then, for each entity, executes an additional query (the "N") to fetch related data. This can lead to a large number of unnecessary database queries, severely impacting performance.

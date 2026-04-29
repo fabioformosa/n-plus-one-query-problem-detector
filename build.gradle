@@ -9,7 +9,7 @@ plugins {
 group = 'it.fabioformosa'
 version = file('VERSION').text.trim()
 
-ext.springBootVersion = '3.5.14'
+ext.springBootVersion = '4.0.6'
 
 java {
 	toolchain {
@@ -48,6 +48,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.platform:junit-platform-testkit'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	testImplementation 'org.springframework.boot:spring-boot-liquibase'
 	testImplementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
 	testImplementation 'com.h2database:h2'
