@@ -65,10 +65,6 @@ This library provides utilities to detect and assert the presence of the N+1 que
 
 ## Testing Library Usage
 
-The detector enables Hibernate statistics automatically when monitoring starts. You do not need to set `spring.jpa.properties.hibernate.generate_statistics=true` in your test configuration.
-
-The library deliberately resets Hibernate statistics when monitoring starts and stops, so the assertions only see the monitored test slice. Hibernate statistics belong to the whole `SessionFactory`; avoid sharing the same persistence context across parallel tests that also inspect or rely on Hibernate statistics.
-
 ### JUnit Extension With Annotations
 
 Use the JUnit extension when you want the detector to start before the test method and stop after the test method automatically. This avoids injecting `NPlusOneQueryProblemDetector` only to bracket the test logic.
@@ -159,6 +155,18 @@ NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(7);
 NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
 NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(5);
 ```
+
+### Caveat: Parallel Test Execution
+
+The library deliberately resets Hibernate statistics when monitoring starts and stops, so the assertions only see the monitored test slice.
+
+Detector tests must run in a non-parallel way when they share the same Hibernate `SessionFactory` with other integration tests.
+
+This library relies on Hibernate `Statistics`, and Hibernate statistics belong to the whole `SessionFactory`; they are not scoped to a single test method, thread, transaction, `EntityManager`, or Hibernate `Session`. When monitoring starts or stops, the detector clears those shared statistics. If another integration test runs at the same time against the same `SessionFactory`, the monitored counters can be polluted by that test's queries, or cleared by another detector test.
+
+For this reason, serialization is mandatory for tests that use this detector and share the same `SessionFactory`. Do not run detector tests concurrently with other integration tests that use the same Spring `ApplicationContext` / JPA `EntityManagerFactory` / Hibernate `SessionFactory`.
+
+If your build enables parallel JUnit execution, isolate detector tests by using a non-parallel test group, disabling parallel execution for those tests, or giving them an isolated Spring context / `SessionFactory`.
 
 ## Devlog & Video Series
 [![Watch the video](https://img.youtube.com/vi/nF8DMHj-fmY/maxresdefault.jpg)](https://www.youtube.com/watch?v=nF8DMHj-fmY)
