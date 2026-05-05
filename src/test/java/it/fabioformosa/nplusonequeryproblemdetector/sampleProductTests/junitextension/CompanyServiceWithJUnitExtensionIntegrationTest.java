@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests;
+package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests.junitextension;
 
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectCollectionFetchCount;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;

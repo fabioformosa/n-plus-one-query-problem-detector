@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.internal.tests;
+package it.fabioformosa.nplusonequeryproblemdetector.internal.tests.engine;
 
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemAssertions;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
@@ -117,6 +117,18 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
         } finally {
             statistics.setStatisticsEnabled(statisticsEnabledBeforeTest);
         }
+    }
+
+    @Test
+    void givenStatisticsAlreadyContainQueries_whenDetectorMonitors_thenOnlyDeltaWindowIsCounted() {
+        companyService.list(0, 5);
+
+        detector.startMonitoring();
+        companyService.listWithFetchViaJQL(0, 5);
+        detector.stopMonitoring();
+
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
+        NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(0);
     }
 
     private Statistics getSessionStatistics() {

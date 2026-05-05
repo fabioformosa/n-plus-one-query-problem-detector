@@ -6,6 +6,11 @@ import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Component
 @SuppressWarnings("java:S6813")
 public class NPlusOneQueryProblemDetector {
@@ -13,22 +18,20 @@ public class NPlusOneQueryProblemDetector {
     @Autowired
     private EntityManager entityManager;
 
-    private HibernateStatsSnapshot startSnapshot;
-    private HibernateStatsSnapshot endSnapshot;
+    private HibernateDetailedStatsSnapshot startSnapshot;
+    private HibernateDetailedStatsSnapshot endSnapshot;
     private boolean statisticsEnabledBeforeMonitoring;
 
     public void startMonitoring() {
         Statistics statistics = getSessionStatistics();
         statisticsEnabledBeforeMonitoring = statistics.isStatisticsEnabled();
         statistics.setStatisticsEnabled(true);
-        statistics.clear();
-        startSnapshot = takeStatsSnapshot(statistics);
+        startSnapshot = takeDetailedStatsSnapshot(statistics);
     }
 
     public void stopMonitoring() {
         Statistics statistics = getSessionStatistics();
-        endSnapshot = takeStatsSnapshot(statistics);
-        statistics.clear();
+        endSnapshot = takeDetailedStatsSnapshot(statistics);
         statistics.setStatisticsEnabled(statisticsEnabledBeforeMonitoring);
     }
 
@@ -37,21 +40,47 @@ public class NPlusOneQueryProblemDetector {
         return session.getSessionFactory().getStatistics();
     }
 
-    private HibernateStatsSnapshot takeStatsSnapshot(Statistics statistics) {
-        return HibernateStatsSnapshot.builder()
-                .queryExecutionCount(statistics.getQueryExecutionCount())
-                .entityFetchCount(statistics.getEntityFetchCount())
-                .collectionFetchCount(statistics.getCollectionFetchCount())
-                .secondLevelCacheHitCount(statistics.getSecondLevelCacheHitCount())
-                .build();
+    private HibernateDetailedStatsSnapshot takeDetailedStatsSnapshot(Statistics statistics) {
+        return new HibernateDetailedStatsSnapshot(
+                HibernateStatsSnapshot.builder()
+                        .queryExecutionCount(statistics.getQueryExecutionCount())
+                        .prepareStatementCount(statistics.getPrepareStatementCount())
+                        .entityFetchCount(statistics.getEntityFetchCount())
+                        .collectionFetchCount(statistics.getCollectionFetchCount())
+                        .secondLevelCacheHitCount(statistics.getSecondLevelCacheHitCount())
+                        .build(),
+                Arrays.stream(statistics.getCollectionRoleNames())
+                        .collect(Collectors.toMap(Function.identity(), role -> statistics.getCollectionStatistics(role).getFetchCount())),
+                Arrays.stream(statistics.getEntityNames())
+                        .collect(Collectors.toMap(Function.identity(), entity -> statistics.getEntityStatistics(entity).getFetchCount()))
+        );
     }
 
     public HibernateStatsSnapshot getMonitoredStats() {
-        return HibernateStatsSnapshot.builder()
-                .queryExecutionCount(endSnapshot.getQueryExecutionCount() - startSnapshot.getQueryExecutionCount())
-                .entityFetchCount(endSnapshot.getEntityFetchCount() - startSnapshot.getEntityFetchCount())
-                .collectionFetchCount(endSnapshot.getCollectionFetchCount() - startSnapshot.getCollectionFetchCount())
-                .secondLevelCacheHitCount(endSnapshot.getSecondLevelCacheHitCount() - startSnapshot.getSecondLevelCacheHitCount())
-                .build();
+        return getDetailedMonitoredStats().aggregate();
     }
+
+    public NPlusOneMonitoredStats getDetailedMonitoredStats() {
+        HibernateStatsSnapshot startAggregate = startSnapshot.aggregate();
+        HibernateStatsSnapshot endAggregate = endSnapshot.aggregate();
+        HibernateStatsSnapshot aggregateDelta = HibernateStatsSnapshot.builder()
+                .queryExecutionCount(endAggregate.getQueryExecutionCount() - startAggregate.getQueryExecutionCount())
+                .prepareStatementCount(endAggregate.getPrepareStatementCount() - startAggregate.getPrepareStatementCount())
+                .entityFetchCount(endAggregate.getEntityFetchCount() - startAggregate.getEntityFetchCount())
+                .collectionFetchCount(endAggregate.getCollectionFetchCount() - startAggregate.getCollectionFetchCount())
+                .secondLevelCacheHitCount(endAggregate.getSecondLevelCacheHitCount() - startAggregate.getSecondLevelCacheHitCount())
+                .build();
+
+        return new NPlusOneMonitoredStats(
+                aggregateDelta,
+                deltaMap(startSnapshot.collectionFetchCounts(), endSnapshot.collectionFetchCounts()),
+                deltaMap(startSnapshot.entityFetchCounts(), endSnapshot.entityFetchCounts())
+        );
+    }
+
+    private Map<String, Long> deltaMap(Map<String, Long> start, Map<String, Long> end) {
+        return end.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue() - start.getOrDefault(entry.getKey(), 0L)));
+    }
+
 }

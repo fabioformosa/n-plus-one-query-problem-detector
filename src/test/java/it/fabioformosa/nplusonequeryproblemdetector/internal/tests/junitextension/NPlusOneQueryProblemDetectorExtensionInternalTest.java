@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.internal.tests;
+package it.fabioformosa.nplusonequeryproblemdetector.internal.tests.junitextension;
 
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
 import it.fabioformosa.nplusonequeryproblemdetector.junitextension.NPlusOneQueryProblemDetectorExtension;

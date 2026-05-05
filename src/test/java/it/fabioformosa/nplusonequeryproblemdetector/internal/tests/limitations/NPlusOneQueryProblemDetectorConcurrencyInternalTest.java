@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.internal.tests;
+package it.fabioformosa.nplusonequeryproblemdetector.internal.tests.limitations;
 
 import it.fabioformosa.nplusonequeryproblemdetector.engine.HibernateStatsSnapshot;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
@@ -30,13 +30,13 @@ class NPlusOneQueryProblemDetectorConcurrencyInternalTest extends AbstractIntegr
     private NPlusOneQueryProblemDetector detector;
 
     @Test
-    void givenOverlappingMonitoringWindows_whenSecondWindowStarts_thenFirstWindowStatisticsAreCleared() throws Exception {
+    void givenOverlappingMonitoringWindows_whenSecondWindowStarts_thenFirstWindowDetectorSnapshotsAreOverwritten() throws Exception {
         HibernateStatsSnapshot isolatedStats = monitorCompanyList();
         Assertions.assertThat(isolatedStats.getQueryExecutionCount()).isEqualTo(2);
         Assertions.assertThat(isolatedStats.getCollectionFetchCount()).isEqualTo(5);
 
         CountDownLatch firstWindowHasExecutedQueries = new CountDownLatch(1);
-        CountDownLatch secondWindowHasStartedAndClearedStatistics = new CountDownLatch(1);
+        CountDownLatch secondWindowHasStartedAndOverwrittenDetectorSnapshot = new CountDownLatch(1);
         CountDownLatch firstWindowHasCapturedStats = new CountDownLatch(1);
         ExecutorService executorService = Executors.newFixedThreadPool(2);
 
@@ -46,7 +46,7 @@ class NPlusOneQueryProblemDetectorConcurrencyInternalTest extends AbstractIntegr
                 companyService.list(0, 5);
                 firstWindowHasExecutedQueries.countDown();
 
-                await(secondWindowHasStartedAndClearedStatistics);
+                await(secondWindowHasStartedAndOverwrittenDetectorSnapshot);
                 detector.stopMonitoring();
                 HibernateStatsSnapshot monitoredStats = detector.getMonitoredStats();
                 firstWindowHasCapturedStats.countDown();
@@ -56,7 +56,7 @@ class NPlusOneQueryProblemDetectorConcurrencyInternalTest extends AbstractIntegr
             Future<?> secondWindow = executorService.submit(() -> {
                 await(firstWindowHasExecutedQueries);
                 detector.startMonitoring();
-                secondWindowHasStartedAndClearedStatistics.countDown();
+                secondWindowHasStartedAndOverwrittenDetectorSnapshot.countDown();
 
                 await(firstWindowHasCapturedStats);
                 detector.stopMonitoring();
@@ -67,10 +67,10 @@ class NPlusOneQueryProblemDetectorConcurrencyInternalTest extends AbstractIntegr
             secondWindow.get(WAIT_TIMEOUT.toSeconds(), TimeUnit.SECONDS);
 
             Assertions.assertThat(corruptedStats.getQueryExecutionCount())
-                    .as("the second monitoring window clears the SessionFactory-level query counter")
+                    .as("the detector is a singleton, so the second monitoring window overwrites the first start snapshot")
                     .isZero();
             Assertions.assertThat(corruptedStats.getCollectionFetchCount())
-                    .as("the second monitoring window clears the SessionFactory-level collection fetch counter")
+                    .as("the detector is a singleton, so overlapping windows must still be avoided")
                     .isZero();
         } finally {
             executorService.shutdownNow();

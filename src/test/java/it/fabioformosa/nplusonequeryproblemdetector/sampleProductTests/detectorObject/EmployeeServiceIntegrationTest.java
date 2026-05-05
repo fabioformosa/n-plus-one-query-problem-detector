@@ -1,4 +1,4 @@
-package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests;
+package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests.detectorObject;
 
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemAssertions;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;

@@ -39,8 +39,15 @@ This library provides utilities to detect and assert the presence of the N+1 que
      testImplementation 'it.fabioformosa:n-plus-one-query-problem-detector:REPLACE_WITH_LATEST_VERSION'
      ```
 
-2. **Write your test with the JUnit extension**
-   - This is the simplest way to use the library: annotate the test class with `@ExtendWith(NPlusOneQueryProblemDetectorExtension.class)` and declare expectations on the test method.
+2. **Choose how to use the library**
+
+   Use **scan mode** when you want to get a report of possible N+1 query candidates about your existing test suite of integration tests, based on Spring Framework, without changing them.
+
+   ```properties
+   nplusone.scan.enabled=true
+   ```
+
+   Use **explicit assertion mode** when you want to control regressions on the n+1 query problem, making fail your integration tests when they don't pass assertions about the expected number of performed queries. The JUnit extension starts and stops monitoring around the test method automatically:
 
    ```java
    import it.fabioformosa.nplusonequeryproblemdetector.junitextension.ExpectMaxQueries;
@@ -69,7 +76,7 @@ This library provides utilities to detect and assert the presence of the N+1 que
 
 ### JUnit Extension With Annotations
 
-Use the JUnit extension when you want the detector to start before the test method and stop after the test method automatically. This avoids injecting `NPlusOneQueryProblemDetector` only to bracket the test logic.
+Use the JUnit extension when you want simply decorate the integration tests, avoiding to get injected the Detector Object and write assertions within the test as in the manual mode, described in the next section.
 
 ```java
 @SpringBootTest
@@ -124,15 +131,136 @@ void testNPlusOne() {
     NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2);
 }
 ```
+Please find all assertions you can use in the next sections.
+
+### Scan Mode For Existing Spring Tests
+
+Scan mode observes existing Spring integration tests without adding detector objects, JUnit extensions, or expectation annotations to those tests.
+
+The library contributes a Spring `TestExecutionListener` through `META-INF/spring.factories`. Spring TestContext can discover that listener automatically from the dependency jar. 
+The listener is intentionally passive by default, so adding the dependency does not change test behavior unless scan mode is enabled.
+
+Enable scan mode in test properties:
+
+```properties
+nplusone.scan.enabled=true
+```
+
+The application tests only need `nplusone.scan.enabled=true`.
+
+When enabled, the listener wraps every Spring test method, snapshots Hibernate `Statistics` before and after the test, captures SQL fingerprints, classifies possible N+1 candidates, and prints one aggregate console report when the test JVM exits.
+
+Scan mode reports candidates instead of comparing against expected query counts. It detects likely N+1 behavior through lazy fetch counters and repeated SQL shapes.
+
+Confidence levels:
+
+| Confidence | Criteria |
+| --- | --- |
+| `HIGH` | Lazy collection/entity fetches exceed the threshold and repeated `SELECT` SQL fingerprints confirm the pattern. |
+| `MEDIUM` | Lazy collection/entity fetches exceed the threshold, but SQL fingerprints are unavailable, or repeated `SELECT` fingerprints are detected without Hibernate lazy-fetch counters. |
+| `LOW` | Prepared statement count exceeds the threshold without a more specific lazy-fetch or repeated-SQL signal. |
+
+Default thresholds:
+
+```properties
+nplusone.scan.threshold.min-entity-fetches=2
+nplusone.scan.threshold.min-collection-fetches=2
+nplusone.scan.threshold.min-repeated-select-fingerprint=2
+nplusone.scan.threshold.min-prepared-statements=10
+```
+
+Failing the build is disabled by default:
+
+```properties
+nplusone.scan.fail-on-detected=false
+```
+
+To fail only on high-confidence non-excluded findings:
+
+```properties
+nplusone.scan.fail-on-detected=true
+nplusone.scan.fail-on-confidence=HIGH
+```
+
+To fail on medium and high confidence findings:
+
+```properties
+nplusone.scan.fail-on-detected=true
+nplusone.scan.fail-on-confidence=MEDIUM
+```
+
+False positive exclusions:
+
+```properties
+nplusone.scan.excluded-tests=com.example.LegacyCompanyServiceTest.*
+nplusone.scan.excluded-associations=com.example.Company.employees
+nplusone.scan.excluded-entities=com.example.Company
+nplusone.scan.excluded-sql-fingerprint-patterns=.*from audit_log.*where.*entity_id=\\?.*
+```
+
+`nplusone.scan.excluded-associations` works when Hibernate per-collection-role statistics identify the affected collection role, for example `com.example.Company.employees`. Entity fetch findings can be excluded with `nplusone.scan.excluded-entities` because Hibernate entity fetch statistics identify the fetched entity type, not always the owning association path.
+
+Report formatting options:
+
+```properties
+nplusone.scan.report.print-sql-fingerprints=true
+nplusone.scan.report.max-sql-fingerprints=5
+```
+
+`nplusone.scan.report.max-sql-fingerprints` limits how many repeated SQL fingerprints are printed per finding. It does not affect detection.
+
+Example report:
+
+```text
+================================================================================
+N+1 Query Problem Detector - Scan Report
+================================================================================
+
+Scan mode: ENABLED
+Fail on detected: false
+Observed tests: 128
+Affected tests: 1
+Excluded findings: 0
+
+--------------------------------------------------------------------------------
+[HIGH] com.example.CompanyServiceTest.listCompanies
+--------------------------------------------------------------------------------
+Reason:
+  Lazy collection fetch pattern detected and confirmed by repeated SELECT SQL.
+
+Hibernate statistics:
+  Query executions:        2
+  Prepared statements:     7
+  Entity fetches:          0
+  Collection fetches:      5
+  Second-level cache hits: 0
+
+Likely affected association:
+  com.example.Company.employees
+
+Repeated SQL fingerprints:
+  5x select e.fk_company,e.id,e.name from employees e where e.fk_company=?
+
+Suggested fixes:
+  1. Use JOIN FETCH [RECOMMENDED] when this use case always needs the association.
+  2. Use EntityGraph when the fetch shape should be declarative or reusable.
+  3. Use batch fetching when lazy loading is acceptable but should be grouped.
+  4. Use DTO/projection queries when only selected fields are needed.
+```
+
+Scan mode limitations:
+
+- It reports N+1 behavior observed during existing tests. It cannot detect lazy paths that tests do not execute.
+- Hibernate `Statistics` are `SessionFactory`-wide, so scan-mode tests should not run in parallel against the same `SessionFactory`.
 
 ### Assertions Deep Dive
 
-| Annotation-style | Assertion-style | Description |
-| --- | --- | --- |
-| `@ExpectMaxQueries(max)` | `NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(max)` | Broad query budget for the monitored use case. It fails when total monitored Hibernate stats exceed `max`, including query executions, entity fetches, collection fetches, and second-level cache hits. |
-| `@ExpectQueryExecutionCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(count)` | Exact number of executed queries. Useful for repository calls that should run a fixed number of queries, such as a paginated content query plus count query. |
-| `@ExpectEntityFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(count)` | Exact number of lazy entity fetches. Useful for detecting many-to-one or one-to-one lazy loading patterns. |
-| `@ExpectCollectionFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(count)` | Exact number of lazy collection fetches. Useful for detecting one-to-many N+1 patterns when accessing nested collections. |
+| Annotation-style | Assertion-style | Description                                                                                                                                                                                                                                                                             |
+| --- | --- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `@ExpectMaxQueries(max)` | `NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(max)` | Broad query budget for the monitored use case. It fails when total monitored Hibernate stats exceed `max`, including query executions, entity fetches, collection fetches, and second-level cache hits.                                                                                 |
+| `@ExpectQueryExecutionCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(count)` | Exact number of executed queries. Useful for repository calls that should run a fixed number of queriesFor instance, a service method which return the first page of a paginate list the expected number of executed queries should be 2 (the fetch query and the total count of items) |
+| `@ExpectEntityFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(count)` | Exact number of lazy entity fetches. Useful for detecting many-to-one or one-to-one lazy loading patterns. This counter shouldn't be N, whether N is the items of a paginated list                                                                                                      |
+| `@ExpectCollectionFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(count)` | Exact number of lazy collection fetches. Useful for detecting one-to-many N+1 patterns when accessing nested collections. This counter shouldn't be N, whether N is the items of a paginated list                                                                                                                                                              |
 
 You can combine annotation-style assertions on the same test when you want both a high-level query budget and precise Hibernate statistic expectations:
 
@@ -160,11 +288,11 @@ NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collecti
 
 ### Caveat: Parallel Test Execution
 
-The library deliberately resets Hibernate statistics when monitoring starts and stops, so the assertions only see the monitored test slice.
+The detector computes deltas between start and stop Hibernate statistics snapshots, so previous statistics do not affect a sequential monitored test slice.
 
 Detector tests must run in a non-parallel way when they share the same Hibernate `SessionFactory` with other integration tests.
 
-This library relies on Hibernate `Statistics`, and Hibernate statistics belong to the whole `SessionFactory`; they are not scoped to a single test method, thread, transaction, `EntityManager`, or Hibernate `Session`. When monitoring starts or stops, the detector clears those shared statistics. If another integration test runs at the same time against the same `SessionFactory`, the monitored counters can be polluted by that test's queries, or cleared by another detector test.
+This library relies on Hibernate `Statistics`, and Hibernate statistics belong to the whole `SessionFactory`; they are not scoped to a single test method, thread, transaction, `EntityManager`, or Hibernate `Session`. If another integration test runs at the same time against the same `SessionFactory`, the monitored counters can be polluted by that test's queries. The detector object also keeps its current monitoring window in mutable fields, so overlapping windows that share the same detector bean can overwrite each other.
 
 For this reason, serialization is mandatory for tests that use this detector and share the same `SessionFactory`. Do not run detector tests concurrently with other integration tests that use the same Spring `ApplicationContext` / JPA `EntityManagerFactory` / Hibernate `SessionFactory`.
 

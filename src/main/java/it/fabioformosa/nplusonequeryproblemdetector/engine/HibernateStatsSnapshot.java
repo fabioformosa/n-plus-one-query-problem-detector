@@ -7,6 +7,7 @@ import lombok.Data;
 @Builder
 public class HibernateStatsSnapshot {
     private final long queryExecutionCount;
+    private final long prepareStatementCount;
     private final long entityFetchCount;
     private final long collectionFetchCount;
     private final long secondLevelCacheHitCount;
