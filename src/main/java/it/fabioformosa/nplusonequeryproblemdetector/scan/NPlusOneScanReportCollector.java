@@ -6,27 +6,32 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
 public final class NPlusOneScanReportCollector {
 
+    private static final Logger LOGGER = Logger.getLogger(NPlusOneScanReportCollector.class.getName());
+    private static final String REPORT_SEPARATOR = "================================================================================\n";
     private static final List<NPlusOneFinding> FINDINGS = new CopyOnWriteArrayList<>();
     private static final AtomicBoolean SHUTDOWN_HOOK_REGISTERED = new AtomicBoolean(false);
-    private static volatile NPlusOneScanProperties lastProperties = NPlusOneScanProperties.defaults();
-    private static volatile long observedTests;
+    private static final AtomicReference<NPlusOneScanProperties> LAST_PROPERTIES = new AtomicReference<>(NPlusOneScanProperties.defaults());
+    private static final AtomicLong OBSERVED_TESTS = new AtomicLong();
 
     private NPlusOneScanReportCollector() {
         throw new IllegalStateException("Utility class");
     }
 
     public static void registerShutdownHookOnce(NPlusOneScanProperties properties) {
-        lastProperties = properties;
+        LAST_PROPERTIES.set(properties);
         if (SHUTDOWN_HOOK_REGISTERED.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> printReport(System.out), "nplusone-scan-report"));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> LOGGER.info(() -> renderReport(LAST_PROPERTIES.get())), "nplusone-scan-report"));
         }
     }
 
     public static void recordObservedTest() {
-        observedTests++;
+        OBSERVED_TESTS.incrementAndGet();
     }
 
     public static void addFindings(List<NPlusOneFinding> findings) {
@@ -39,12 +44,12 @@ public final class NPlusOneScanReportCollector {
 
     public static void reset() {
         FINDINGS.clear();
-        observedTests = 0;
-        lastProperties = NPlusOneScanProperties.defaults();
+        OBSERVED_TESTS.set(0L);
+        LAST_PROPERTIES.set(NPlusOneScanProperties.defaults());
     }
 
     public static void printReport(PrintStream printStream) {
-        printStream.print(renderReport(lastProperties));
+        printStream.print(renderReport(LAST_PROPERTIES.get()));
     }
 
     public static String renderReport(NPlusOneScanProperties properties) {
@@ -55,12 +60,12 @@ public final class NPlusOneScanReportCollector {
         long excludedFindings = findings.stream().filter(NPlusOneFinding::isExcluded).count();
 
         StringBuilder report = new StringBuilder();
-        report.append("================================================================================\n");
+        report.append(REPORT_SEPARATOR);
         report.append("N+1 Query Problem Detector - Scan Report\n");
-        report.append("================================================================================\n\n");
+        report.append(REPORT_SEPARATOR).append("\n");
         report.append("Scan mode: ENABLED\n");
         report.append("Fail on detected: ").append(properties.failOnDetected()).append("\n");
-        report.append("Observed tests: ").append(observedTests).append("\n");
+        report.append("Observed tests: ").append(OBSERVED_TESTS.get()).append("\n");
         report.append("Affected tests: ").append(includedFindings).append("\n");
         report.append("Excluded findings: ").append(excludedFindings).append("\n\n");
 
@@ -119,16 +124,16 @@ public final class NPlusOneScanReportCollector {
     }
 
     private static void appendSummary(StringBuilder report, List<NPlusOneFinding> findings, NPlusOneScanProperties properties) {
-        report.append("================================================================================\n");
+        report.append(REPORT_SEPARATOR);
         report.append("Summary by confidence\n");
-        report.append("================================================================================\n");
+        report.append(REPORT_SEPARATOR);
         report.append("HIGH:   ").append(countIncluded(findings, NPlusOneConfidence.HIGH)).append("\n");
         report.append("MEDIUM: ").append(countIncluded(findings, NPlusOneConfidence.MEDIUM)).append("\n");
         report.append("LOW:    ").append(countIncluded(findings, NPlusOneConfidence.LOW)).append("\n");
         report.append("EXCLUDED: ").append(findings.stream().filter(NPlusOneFinding::isExcluded).count()).append("\n\n");
         report.append("Build result:\n");
         report.append("  Tests ").append(properties.failOnDetected() ? "may fail on non-excluded findings at or above " + properties.failOnConfidence() : "were not failed because nplusone.scan.fail-on-detected=false").append(".\n");
-        report.append("================================================================================\n");
+        report.append(REPORT_SEPARATOR);
     }
 
     private static long countIncluded(List<NPlusOneFinding> findings, NPlusOneConfidence confidence) {

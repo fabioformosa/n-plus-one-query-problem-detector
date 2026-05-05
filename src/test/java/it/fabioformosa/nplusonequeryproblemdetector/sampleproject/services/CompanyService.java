@@ -31,14 +31,12 @@ public class CompanyService {
 
     public PaginatedListDto<CompanyDto> listWithFetchViaJQL(int pageNum, int pageSize){
         Page<Company> companyPage = companyRepository.findPaginatedWithEmployees(PageRequest.of(pageNum, pageSize, Sort.by("id")));
-        PaginatedListDto<CompanyDto> paginatedListDto = Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
-        return paginatedListDto;
+        return Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
     }
 
     public PaginatedListDto<CompanyDto> listWithFetchViaSpecification(int pageNum, int pageSize){
         Page<Company> companyPage = companyRepository.findAll(fetchEmployeesSpecification(), PageRequest.of(pageNum, pageSize, Sort.by("id")));
-        PaginatedListDto<CompanyDto> paginatedListDto = Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
-        return paginatedListDto;
+        return Converter.fromPageToPaginatedListDto(companyPage, Converter::fromCompanyToCompanyDto);
     }
 
     private static Specification<Company> fetchEmployeesSpecification() {

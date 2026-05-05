@@ -15,7 +15,7 @@ public final class SqlStatementCapture {
         CURRENT_STATEMENTS.set(new ArrayList<>());
     }
 
-    public static void record(String sql) {
+    public static void capture(String sql) {
         List<String> statements = CURRENT_STATEMENTS.get();
         if (statements != null && sql != null) {
             statements.add(sql);

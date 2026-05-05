@@ -51,7 +51,8 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
 
         detector.stopMonitoring();
 
-        Assertions.assertThatThrownBy(() -> NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2))
+        NPlusOneQueryProblemAssertions.NPlusOneQueryProblemAssert assertions = NPlusOneQueryProblemAssertions.assertThat(detector);
+        Assertions.assertThatThrownBy(() -> assertions.hasCountedMaxQueries(2))
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("Expected maximum");
         NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
@@ -71,7 +72,8 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
 
         detector.stopMonitoring();
 
-        Assertions.assertThatThrownBy(() -> NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2))
+        NPlusOneQueryProblemAssertions.NPlusOneQueryProblemAssert assertions = NPlusOneQueryProblemAssertions.assertThat(detector);
+        Assertions.assertThatThrownBy(() -> assertions.hasCountedMaxQueries(2))
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("Expected maximum");
         NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);
@@ -91,7 +93,8 @@ class NPlusOneQueryProblemAssertionsInternalTest extends AbstractIntegrationTest
 
         detector.stopMonitoring();
 
-        Assertions.assertThatThrownBy(() -> NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(2))
+        NPlusOneQueryProblemAssertions.NPlusOneQueryProblemAssert assertions = NPlusOneQueryProblemAssertions.assertThat(detector);
+        Assertions.assertThatThrownBy(() -> assertions.hasCountedMaxQueries(2))
                 .isInstanceOf(AssertionError.class)
                 .hasMessageContaining("Expected maximum");
         NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(2);

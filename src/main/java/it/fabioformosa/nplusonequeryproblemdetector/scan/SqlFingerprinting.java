@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public final class SqlFingerprinting {
 
-    private static final Pattern QUOTED_STRING = Pattern.compile("'([^']|'')*'");
+    private static final Pattern QUOTED_STRING = Pattern.compile("'(?:[^']|'')*+'");
     private static final Pattern NUMBER = Pattern.compile("(?<![\\w.])-?\\d+(?:\\.\\d+)?(?![\\w.])");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 

@@ -2,6 +2,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests.scan;
 
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -19,6 +20,6 @@ class CompanyServiceWithExcludedSqlFingerprintScanModeIntegrationTest extends Ab
 
     @Test
     void givenReviewedSqlFingerprintFinding_whenSqlPatternIsExcluded_thenFailOnDetectedDoesNotFailTheTest() {
-        companyService.list(0, 5);
+        Assertions.assertThat(companyService.list(0, 5).getItems()).hasSize(5);
     }
 }

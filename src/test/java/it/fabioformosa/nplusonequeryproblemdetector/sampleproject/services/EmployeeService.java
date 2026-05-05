@@ -33,20 +33,17 @@ public class EmployeeService {
 
     public PaginatedListDto<EmployeeDto> list(int pageNum, int pageSize) {
         Page<Employee> employeePage = employeeRepository.findAll(PageRequest.of(pageNum, pageSize, Sort.by("id")));
-        PaginatedListDto<EmployeeDto> paginatedListDto = Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
-        return paginatedListDto;
+        return Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
     }
 
     public PaginatedListDto<EmployeeDto> listWithSpecification(int pageNum, int pageSize){
         Page<Employee> employeePage = employeeRepository.findAll(fetchCompanySpecification(), PageRequest.of(pageNum, pageSize, Sort.by("id")));
-        PaginatedListDto<EmployeeDto> paginatedListDto = Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
-        return paginatedListDto;
+        return Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
     }
 
     public PaginatedListDto<EmployeeDto> listWithCompany(int pageNum, int pageSize){
         Page<Employee> employeePage = employeeRepository.findPaginatedWithCompany(PageRequest.of(pageNum, pageSize, Sort.by("id")));
-        PaginatedListDto<EmployeeDto> paginatedListDto = Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
-        return paginatedListDto;
+        return Converter.fromPageToPaginatedListDto(employeePage, Converter::fromEmployeeToEmployeeDto);
     }
 
 }

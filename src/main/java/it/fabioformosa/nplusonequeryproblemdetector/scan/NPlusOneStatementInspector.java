@@ -6,7 +6,7 @@ public class NPlusOneStatementInspector implements StatementInspector {
 
     @Override
     public String inspect(String sql) {
-        SqlStatementCapture.record(sql);
+        SqlStatementCapture.capture(sql);
         return sql;
     }
 }

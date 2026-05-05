@@ -2,7 +2,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.scan.autoconfigure;
 
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneStatementInspector;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,8 +27,8 @@ public class NPlusOneScanAutoConfiguration {
     @Bean
     HibernatePropertiesCustomizer nPlusOneStatementInspectorHibernatePropertiesCustomizer() {
         return hibernateProperties -> {
-            Object existingInspector = hibernateProperties.get(AvailableSettings.STATEMENT_INSPECTOR);
-            hibernateProperties.put(AvailableSettings.STATEMENT_INSPECTOR, buildInspector(existingInspector));
+            Object existingInspector = hibernateProperties.get(JdbcSettings.STATEMENT_INSPECTOR);
+            hibernateProperties.put(JdbcSettings.STATEMENT_INSPECTOR, buildInspector(existingInspector));
         };
     }
 

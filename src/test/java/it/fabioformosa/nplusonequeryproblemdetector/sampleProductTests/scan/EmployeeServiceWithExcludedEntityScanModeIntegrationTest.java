@@ -2,6 +2,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.sampleProductTests.scan;
 
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.EmployeeService;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -19,6 +20,6 @@ class EmployeeServiceWithExcludedEntityScanModeIntegrationTest extends AbstractI
 
     @Test
     void givenReviewedEntityFetchFinding_whenEntityIsExcluded_thenFailOnDetectedDoesNotFailTheTest() {
-        employeeService.list(0, 5);
+        Assertions.assertThat(employeeService.list(0, 5).getItems()).hasSize(5);
     }
 }

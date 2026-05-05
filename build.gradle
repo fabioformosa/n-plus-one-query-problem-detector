@@ -4,6 +4,7 @@ plugins {
 	id 'maven-publish'
 	id 'signing'
 	id 'org.sonarqube' version '7.2.3.7755'
+	id 'name.remal.sonarlint' version '7.1.0'
 }
 
 group = 'it.fabioformosa'

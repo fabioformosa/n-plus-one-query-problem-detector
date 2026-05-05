@@ -101,7 +101,8 @@ class NPlusOneScanTestExecutionListenerInternalTest {
 
         @Test
         void givenLazyCollectionsAreFetched_whenScanIsDisabled_thenNoScanFindingIsCollected() {
-            companyService.list(0, 5);
+            PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, 5);
+            Assertions.assertThat(companyDtoList.getItems()).hasSize(5);
         }
     }
 
@@ -128,7 +129,8 @@ class NPlusOneScanTestExecutionListenerInternalTest {
 
         @Test
         void givenLazyCollectionsAreFetched_whenFailOnDetectedIsEnabled_thenTheTestFails() {
-            companyService.list(0, 5);
+            PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, 5);
+            Assertions.assertThat(companyDtoList.getItems()).hasSize(5);
         }
     }
 
@@ -144,7 +146,8 @@ class NPlusOneScanTestExecutionListenerInternalTest {
 
         @Test
         void givenLazyCollectionsAreFetched_whenAssociationIsExcluded_thenTheTestDoesNotFail() {
-            companyService.list(0, 5);
+            PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, 5);
+            Assertions.assertThat(companyDtoList.getItems()).hasSize(5);
         }
     }
 }
