@@ -44,7 +44,7 @@ This library provides utilities to detect and assert the presence of the N+1 que
    Use **scan mode** when you want to get a report of possible N+1 query candidates about your existing test suite of integration tests, based on Spring Framework, without changing them.
 
    ```properties
-   nplusone.scan.enabled=true
+   n-plus-one-query-detector.scan.enabled=true
    ```
 
    Use **explicit assertion mode** when you want to control regressions on the n+1 query problem, making fail your integration tests when they don't pass assertions about the expected number of performed queries. The JUnit extension starts and stops monitoring around the test method automatically:
@@ -143,10 +143,10 @@ The listener is intentionally passive by default, so adding the dependency does 
 Enable scan mode in test properties:
 
 ```properties
-nplusone.scan.enabled=true
+n-plus-one-query-detector.scan.enabled=true
 ```
 
-The application tests only need `nplusone.scan.enabled=true`.
+The application tests only need `n-plus-one-query-detector.scan.enabled=true`.
 
 When enabled, the listener wraps every Spring test method, snapshots Hibernate `Statistics` before and after the test, captures SQL fingerprints, classifies possible N+1 candidates, and prints one aggregate console report when the test JVM exits.
 
@@ -163,51 +163,51 @@ Confidence levels:
 Default thresholds:
 
 ```properties
-nplusone.scan.threshold.min-entity-fetches=2
-nplusone.scan.threshold.min-collection-fetches=2
-nplusone.scan.threshold.min-repeated-select-fingerprint=2
-nplusone.scan.threshold.min-prepared-statements=10
+n-plus-one-query-detector.scan.threshold.min-entity-fetches=2
+n-plus-one-query-detector.scan.threshold.min-collection-fetches=2
+n-plus-one-query-detector.scan.threshold.min-repeated-select-fingerprint=2
+n-plus-one-query-detector.scan.threshold.min-prepared-statements=10
 ```
 
 Failing the build is disabled by default:
 
 ```properties
-nplusone.scan.fail-on-detected=false
+n-plus-one-query-detector.scan.fail-on-detected=false
 ```
 
 To fail only on high-confidence non-excluded findings:
 
 ```properties
-nplusone.scan.fail-on-detected=true
-nplusone.scan.fail-on-confidence=HIGH
+n-plus-one-query-detector.scan.fail-on-detected=true
+n-plus-one-query-detector.scan.fail-on-confidence=HIGH
 ```
 
 To fail on medium and high confidence findings:
 
 ```properties
-nplusone.scan.fail-on-detected=true
-nplusone.scan.fail-on-confidence=MEDIUM
+n-plus-one-query-detector.scan.fail-on-detected=true
+n-plus-one-query-detector.scan.fail-on-confidence=MEDIUM
 ```
 
 False positive exclusions:
 
 ```properties
-nplusone.scan.excluded-tests=com.example.LegacyCompanyServiceTest.*
-nplusone.scan.excluded-associations=com.example.Company.employees
-nplusone.scan.excluded-entities=com.example.Company
-nplusone.scan.excluded-sql-fingerprint-patterns=.*from audit_log.*where.*entity_id=\\?.*
+n-plus-one-query-detector.scan.excluded-tests=com.example.LegacyCompanyServiceTest.*
+n-plus-one-query-detector.scan.excluded-associations=com.example.Company.employees
+n-plus-one-query-detector.scan.excluded-entities=com.example.Company
+n-plus-one-query-detector.scan.excluded-sql-fingerprint-patterns=.*from audit_log.*where.*entity_id=\\?.*
 ```
 
-`nplusone.scan.excluded-associations` works when Hibernate per-collection-role statistics identify the affected collection role, for example `com.example.Company.employees`. Entity fetch findings can be excluded with `nplusone.scan.excluded-entities` because Hibernate entity fetch statistics identify the fetched entity type, not always the owning association path.
+`n-plus-one-query-detector.scan.excluded-associations` works when Hibernate per-collection-role statistics identify the affected collection role, for example `com.example.Company.employees`. Entity fetch findings can be excluded with `n-plus-one-query-detector.scan.excluded-entities` because Hibernate entity fetch statistics identify the fetched entity type, not always the owning association path.
 
 Report formatting options:
 
 ```properties
-nplusone.scan.report.print-sql-fingerprints=true
-nplusone.scan.report.max-sql-fingerprints=5
+n-plus-one-query-detector.scan.report.print-sql-fingerprints=true
+n-plus-one-query-detector.scan.report.max-sql-fingerprints=5
 ```
 
-`nplusone.scan.report.max-sql-fingerprints` limits how many repeated SQL fingerprints are printed per finding. It does not affect detection.
+`n-plus-one-query-detector.scan.report.max-sql-fingerprints` limits how many repeated SQL fingerprints are printed per finding. It does not affect detection.
 
 Example report:
 

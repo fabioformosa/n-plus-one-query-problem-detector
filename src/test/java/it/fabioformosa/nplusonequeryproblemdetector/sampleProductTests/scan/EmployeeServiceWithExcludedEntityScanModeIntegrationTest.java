@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(properties = {
-        "nplusone.scan.enabled=true",
-        "nplusone.scan.fail-on-detected=true",
-        "nplusone.scan.fail-on-confidence=MEDIUM",
-        "nplusone.scan.excluded-entities=it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company"
+        "n-plus-one-query-detector.scan.enabled=true",
+        "n-plus-one-query-detector.scan.fail-on-detected=true",
+        "n-plus-one-query-detector.scan.fail-on-confidence=MEDIUM",
+        "n-plus-one-query-detector.scan.excluded-entities=it.fabioformosa.nplusonequeryproblemdetector.sampleproject.entities.Company"
 })
 class EmployeeServiceWithExcludedEntityScanModeIntegrationTest extends AbstractIntegrationTestSuite {
 

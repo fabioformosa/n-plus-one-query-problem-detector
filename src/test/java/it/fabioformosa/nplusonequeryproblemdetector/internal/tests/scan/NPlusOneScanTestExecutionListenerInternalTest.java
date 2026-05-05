@@ -94,7 +94,7 @@ class NPlusOneScanTestExecutionListenerInternalTest {
                 });
     }
 
-    @TestPropertySource(properties = "nplusone.scan.enabled=false")
+    @TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=false")
     static class DisabledScanModeCase extends AbstractIntegrationTestSuite {
         @Autowired
         private CompanyService companyService;
@@ -106,7 +106,7 @@ class NPlusOneScanTestExecutionListenerInternalTest {
         }
     }
 
-    @TestPropertySource(properties = "nplusone.scan.enabled=true")
+    @TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=true")
     static class CollectionNPlusOneScanModeCase extends AbstractIntegrationTestSuite {
         @Autowired
         private CompanyService companyService;
@@ -119,9 +119,9 @@ class NPlusOneScanTestExecutionListenerInternalTest {
     }
 
     @TestPropertySource(properties = {
-            "nplusone.scan.enabled=true",
-            "nplusone.scan.fail-on-detected=true",
-            "nplusone.scan.fail-on-confidence=MEDIUM"
+            "n-plus-one-query-detector.scan.enabled=true",
+            "n-plus-one-query-detector.scan.fail-on-detected=true",
+            "n-plus-one-query-detector.scan.fail-on-confidence=MEDIUM"
     })
     static class FailingScanModeCase extends AbstractIntegrationTestSuite {
         @Autowired
@@ -135,10 +135,10 @@ class NPlusOneScanTestExecutionListenerInternalTest {
     }
 
     @TestPropertySource(properties = {
-            "nplusone.scan.enabled=true",
-            "nplusone.scan.fail-on-detected=true",
-            "nplusone.scan.fail-on-confidence=MEDIUM",
-            "nplusone.scan.excluded-associations=" + COMPANY_EMPLOYEES_ROLE
+            "n-plus-one-query-detector.scan.enabled=true",
+            "n-plus-one-query-detector.scan.fail-on-detected=true",
+            "n-plus-one-query-detector.scan.fail-on-confidence=MEDIUM",
+            "n-plus-one-query-detector.scan.excluded-associations=" + COMPANY_EMPLOYEES_ROLE
     })
     static class ExcludedAssociationScanModeCase extends AbstractIntegrationTestSuite {
         @Autowired

@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(properties = {
-        "nplusone.scan.enabled=true",
-        "nplusone.scan.fail-on-detected=true",
-        "nplusone.scan.fail-on-confidence=MEDIUM",
-        "nplusone.scan.excluded-sql-fingerprint-patterns=.*from employees.*fk_company=\\?.*"
+        "n-plus-one-query-detector.scan.enabled=true",
+        "n-plus-one-query-detector.scan.fail-on-detected=true",
+        "n-plus-one-query-detector.scan.fail-on-confidence=MEDIUM",
+        "n-plus-one-query-detector.scan.excluded-sql-fingerprint-patterns=.*from employees.*fk_company=\\?.*"
 })
 class CompanyServiceWithExcludedSqlFingerprintScanModeIntegrationTest extends AbstractIntegrationTestSuite {
 

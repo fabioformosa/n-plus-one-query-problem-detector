@@ -89,7 +89,7 @@ class NPlusOneScanReportInternalTest {
                 null,
                 List.of()
         );
-        excludedFinding.exclude("matched nplusone.scan.excluded-associations");
+        excludedFinding.exclude("matched n-plus-one-query-detector.scan.excluded-associations");
         NPlusOneScanReportCollector.addFindings(List.of(excludedFinding));
 
         String report = NPlusOneScanReportCollector.renderReport(enabledProperties());

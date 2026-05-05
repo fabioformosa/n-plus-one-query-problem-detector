@@ -15,7 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 
 @AutoConfiguration
 @ConditionalOnClass({StatementInspector.class, HibernatePropertiesCustomizer.class})
-@ConditionalOnProperty(name = "nplusone.scan.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "n-plus-one-query-detector.scan.enabled", havingValue = "true")
 public class NPlusOneScanAutoConfiguration {
 
     @Bean

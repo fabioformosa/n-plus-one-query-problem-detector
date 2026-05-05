@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "nplusone.scan.enabled=true")
+@TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=true")
 class CompanyServiceWithScanModeIntegrationTest extends AbstractIntegrationTestSuite {
 
     @Autowired

@@ -38,24 +38,24 @@ public record NPlusOneScanProperties(
     public static NPlusOneScanProperties from(Environment environment) {
         NPlusOneThresholds defaultThresholds = NPlusOneThresholds.defaults();
         NPlusOneThresholds thresholds = new NPlusOneThresholds(
-                getLong(environment, "nplusone.scan.threshold.min-entity-fetches", defaultThresholds.minEntityFetches()),
-                getLong(environment, "nplusone.scan.threshold.min-collection-fetches", defaultThresholds.minCollectionFetches()),
-                getLong(environment, "nplusone.scan.threshold.min-repeated-select-fingerprint", defaultThresholds.minRepeatedSelectFingerprint()),
-                getLong(environment, "nplusone.scan.threshold.min-prepared-statements", defaultThresholds.minPreparedStatements())
+                getLong(environment, "n-plus-one-query-detector.scan.threshold.min-entity-fetches", defaultThresholds.minEntityFetches()),
+                getLong(environment, "n-plus-one-query-detector.scan.threshold.min-collection-fetches", defaultThresholds.minCollectionFetches()),
+                getLong(environment, "n-plus-one-query-detector.scan.threshold.min-repeated-select-fingerprint", defaultThresholds.minRepeatedSelectFingerprint()),
+                getLong(environment, "n-plus-one-query-detector.scan.threshold.min-prepared-statements", defaultThresholds.minPreparedStatements())
         );
 
         return new NPlusOneScanProperties(
-                environment.getProperty("nplusone.scan.enabled", Boolean.class, false),
-                environment.getProperty("nplusone.scan.fail-on-detected", Boolean.class, false),
-                getConfidence(environment, "nplusone.scan.fail-on-confidence", NPlusOneConfidence.HIGH),
-                environment.getProperty("nplusone.scan.report.include-clean-tests", Boolean.class, false),
-                environment.getProperty("nplusone.scan.report.print-sql-fingerprints", Boolean.class, true),
-                environment.getProperty("nplusone.scan.report.max-sql-fingerprints", Integer.class, 5),
+                environment.getProperty("n-plus-one-query-detector.scan.enabled", Boolean.class, false),
+                environment.getProperty("n-plus-one-query-detector.scan.fail-on-detected", Boolean.class, false),
+                getConfidence(environment, "n-plus-one-query-detector.scan.fail-on-confidence", NPlusOneConfidence.HIGH),
+                environment.getProperty("n-plus-one-query-detector.scan.report.include-clean-tests", Boolean.class, false),
+                environment.getProperty("n-plus-one-query-detector.scan.report.print-sql-fingerprints", Boolean.class, true),
+                environment.getProperty("n-plus-one-query-detector.scan.report.max-sql-fingerprints", Integer.class, 5),
                 thresholds,
-                getList(environment, "nplusone.scan.excluded-tests"),
-                getList(environment, "nplusone.scan.excluded-associations"),
-                getList(environment, "nplusone.scan.excluded-entities"),
-                getList(environment, "nplusone.scan.excluded-sql-fingerprint-patterns")
+                getList(environment, "n-plus-one-query-detector.scan.excluded-tests"),
+                getList(environment, "n-plus-one-query-detector.scan.excluded-associations"),
+                getList(environment, "n-plus-one-query-detector.scan.excluded-entities"),
+                getList(environment, "n-plus-one-query-detector.scan.excluded-sql-fingerprint-patterns")
         );
     }
 

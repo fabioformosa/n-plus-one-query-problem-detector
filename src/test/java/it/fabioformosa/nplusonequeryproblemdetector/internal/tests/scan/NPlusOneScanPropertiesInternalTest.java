@@ -21,13 +21,13 @@ class NPlusOneScanPropertiesInternalTest {
     @Test
     void givenCustomProperties_whenLoaded_thenValuesAreBoundFromEnvironment() {
         MockEnvironment environment = new MockEnvironment()
-                .withProperty("nplusone.scan.enabled", "true")
-                .withProperty("nplusone.scan.fail-on-detected", "true")
-                .withProperty("nplusone.scan.fail-on-confidence", "MEDIUM")
-                .withProperty("nplusone.scan.threshold.min-collection-fetches", "4")
-                .withProperty("nplusone.scan.threshold.min-entity-fetches", "3")
-                .withProperty("nplusone.scan.report.max-sql-fingerprints", "2")
-                .withProperty("nplusone.scan.excluded-associations", "Company.employees, Order.lines");
+                .withProperty("n-plus-one-query-detector.scan.enabled", "true")
+                .withProperty("n-plus-one-query-detector.scan.fail-on-detected", "true")
+                .withProperty("n-plus-one-query-detector.scan.fail-on-confidence", "MEDIUM")
+                .withProperty("n-plus-one-query-detector.scan.threshold.min-collection-fetches", "4")
+                .withProperty("n-plus-one-query-detector.scan.threshold.min-entity-fetches", "3")
+                .withProperty("n-plus-one-query-detector.scan.report.max-sql-fingerprints", "2")
+                .withProperty("n-plus-one-query-detector.scan.excluded-associations", "Company.employees, Order.lines");
 
         NPlusOneScanProperties properties = NPlusOneScanProperties.from(environment);
 

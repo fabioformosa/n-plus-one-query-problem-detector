@@ -132,7 +132,7 @@ public final class NPlusOneScanReportCollector {
         report.append("LOW:    ").append(countIncluded(findings, NPlusOneConfidence.LOW)).append("\n");
         report.append("EXCLUDED: ").append(findings.stream().filter(NPlusOneFinding::isExcluded).count()).append("\n\n");
         report.append("Build result:\n");
-        report.append("  Tests ").append(properties.failOnDetected() ? "may fail on non-excluded findings at or above " + properties.failOnConfidence() : "were not failed because nplusone.scan.fail-on-detected=false").append(".\n");
+        report.append("  Tests ").append(properties.failOnDetected() ? "may fail on non-excluded findings at or above " + properties.failOnConfidence() : "were not failed because n-plus-one-query-detector.scan.fail-on-detected=false").append(".\n");
         report.append(REPORT_SEPARATOR);
     }
 

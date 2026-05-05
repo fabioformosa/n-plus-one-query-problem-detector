@@ -13,19 +13,19 @@ public class NPlusOneExclusions {
     public void apply(NPlusOneFinding finding) {
         String testDisplayName = finding.getTestIdentifier().displayName();
         if (matchesAnyWildcard(properties.excludedTests(), testDisplayName)) {
-            finding.exclude("matched nplusone.scan.excluded-tests");
+            finding.exclude("matched n-plus-one-query-detector.scan.excluded-tests");
             return;
         }
         if (finding.getAssociationRole() != null && matchesAnyWildcard(properties.excludedAssociations(), finding.getAssociationRole())) {
-            finding.exclude("matched nplusone.scan.excluded-associations");
+            finding.exclude("matched n-plus-one-query-detector.scan.excluded-associations");
             return;
         }
         if (finding.getEntityName() != null && matchesAnyWildcard(properties.excludedEntities(), finding.getEntityName())) {
-            finding.exclude("matched nplusone.scan.excluded-entities");
+            finding.exclude("matched n-plus-one-query-detector.scan.excluded-entities");
             return;
         }
         if (matchesAnySqlPattern(finding)) {
-            finding.exclude("matched nplusone.scan.excluded-sql-fingerprint-patterns");
+            finding.exclude("matched n-plus-one-query-detector.scan.excluded-sql-fingerprint-patterns");
         }
     }
 
