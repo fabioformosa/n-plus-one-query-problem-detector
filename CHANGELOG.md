@@ -1,7 +1,7 @@
 # Changelog
 
-## Unreleased
-- Coming Soon
+## 1.0.0
+- `NEW FEATURE` Added scan mode to support broader N+1 query detection workflows.
 
 ## 0.2.2
 - `FIX` the build phase including javaSource and javaDoc
