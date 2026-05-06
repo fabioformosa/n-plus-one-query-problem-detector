@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1
+- `FIX` Fixed a compatibility issue with consumer project based on Spring Boot 3
+
 ## 1.0.0
 - `NEW FEATURE` Added scan mode to support broader N+1 query detection workflows.
 
