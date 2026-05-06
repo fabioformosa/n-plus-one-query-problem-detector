@@ -1,14 +1,21 @@
-![https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml](https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml/badge.svg) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
+<div align="center">
+
+# N+1 Query Problem Detector
+
+**A Spring Java testing library for detecting the N+1 query problem in Hibernate-based applications.**
+
+Compatibility: Spring Boot 3.5.x and Spring Boot 4.x.
+
+![https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml](https://github.com/fabioformosa/n-plus-one-query-problem-detector/actions/workflows/ci.yml/badge.svg)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=coverage)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=bugs)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=fabioformosa_n-plus-one-query-problem-detector&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=fabioformosa_n-plus-one-query-problem-detector)
 
-# N+1 Query Problem Detector
+[What is N+1?](#whats-the-n1-query-problem) • [Why this library](#why-a-n1-query-problem-detector) • [Get Started](#get-started) • [Testing Usage](#testing-library-usage) • [Assertions](#assertions-deep-dive) • [Parallel Tests](#caveat-parallel-test-execution) • [Devlog](#devlog--video-series) • [Support](#-support-the-project-)
 
-A Spring Java testing library for detecting the N+1 query problem in Hibernate-based applications.
-
-Compatibility: this library is compatible with Spring Boot 3.5.x and Spring Boot 4.x.
+</div>
 
 ## What's the N+1 Query Problem?
 
@@ -255,12 +262,29 @@ Scan mode limitations:
 
 ### Assertions Deep Dive
 
-| Annotation-style | Assertion-style | Description                                                                                                                                                                                                                                                                             |
-| --- | --- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `@ExpectMaxQueries(max)` | `NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(max)` | Broad query budget for the monitored use case. It fails when total monitored Hibernate stats exceed `max`, including query executions, entity fetches, collection fetches, and second-level cache hits.                                                                                 |
-| `@ExpectQueryExecutionCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(count)` | Exact number of executed queries. Useful for repository calls that should run a fixed number of queriesFor instance, a service method which return the first page of a paginate list the expected number of executed queries should be 2 (the fetch query and the total count of items) |
-| `@ExpectEntityFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(count)` | Exact number of lazy entity fetches. Useful for detecting many-to-one or one-to-one lazy loading patterns. This counter shouldn't be N, whether N is the items of a paginated list                                                                                                      |
-| `@ExpectCollectionFetchCount(count)` | `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(count)` | Exact number of lazy collection fetches. Useful for detecting one-to-many N+1 patterns when accessing nested collections. This counter shouldn't be N, whether N is the items of a paginated list                                                                                                                                                              |
+`@ExpectMaxQueries(max)`
+
+- Equivalent assertion: `NPlusOneQueryProblemAssertions.assertThat(detector).hasCountedMaxQueries(max)`
+- Use it when you want a broad query budget for a monitored use case.
+- It fails when total monitored Hibernate stats exceed `max`, including query executions, entity fetches, collection fetches, and second-level cache hits.
+
+`@ExpectQueryExecutionCount(count)`
+
+- Equivalent assertion: `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).queryExecutionCountIsEqualTo(count)`
+- Use it when you need an exact number of executed queries.
+- Typical example: a paginated service method expected to execute exactly 2 queries (fetch page + total count).
+
+`@ExpectEntityFetchCount(count)`
+
+- Equivalent assertion: `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).entityFetchCountIsEqualTo(count)`
+- Use it when you want to detect many-to-one or one-to-one lazy loading patterns.
+- This counter should not grow with page size (it should not be N for N returned items).
+
+`@ExpectCollectionFetchCount(count)`
+
+- Equivalent assertion: `NPlusOneQueryProblemAssertions.assertThat(detector.getMonitoredStats()).collectionFetchCountIsEqualTo(count)`
+- Use it when you want to detect one-to-many N+1 patterns while accessing nested collections.
+- This counter should not grow with page size (it should not be N for N returned items).
 
 You can combine annotation-style assertions on the same test when you want both a high-level query budget and precise Hibernate statistic expectations:
 
@@ -306,6 +330,11 @@ This project is documented as a devlog, showing how an idea can turn into a proj
 
 - **YouTube Channel:** [bitaligners](https://www.youtube.com/@bitaligners)
 - **Devlog Playlist:** [From Idea to Project: N+1 Query Problem Detector](https://www.youtube.com/watch?v=nF8DMHj-fmY&list=PLIoJ8eJvtC1apnL1jv65VPvr4Q16d04Gc&pp=gAQB)
+
+## ❤️ Support the Project ❤️
+
+Sometimes it is a matter of a small kind action.
+You can support N+1 Query Problem Detector and its continuous improvement by starring this repository on GitHub. ⭐
 
 ## License
 
