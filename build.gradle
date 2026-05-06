@@ -10,7 +10,7 @@ plugins {
 group = 'it.fabioformosa'
 version = file('VERSION').text.trim()
 
-ext.springBootVersion = '4.0.6'
+ext.springBootVersion = findProperty('springBootVersion') ?: '4.0.6'
 
 java {
 	toolchain {
@@ -40,7 +40,6 @@ dependencies {
 	compileOnly 'jakarta.persistence:jakarta.persistence-api'
 	compileOnly 'org.hibernate.orm:hibernate-core'
 	compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
-	compileOnly 'org.springframework.boot:spring-boot-hibernate'
 	compileOnly 'org.springframework:spring-context'
 	compileOnly 'org.springframework:spring-test'
 	compileOnly 'org.springframework:spring-orm'
@@ -58,7 +57,6 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.junit.platform:junit-platform-testkit'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	testImplementation 'org.springframework.boot:spring-boot-liquibase'
 	testImplementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
 	testImplementation 'com.h2database:h2'
@@ -68,6 +66,12 @@ dependencies {
 	mockitoAgent platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 	mockitoAgent('org.mockito:mockito-core') {
 		transitive = false
+	}
+}
+
+if (springBootVersion.toString().startsWith('4.')) {
+	dependencies {
+		testImplementation 'org.springframework.boot:spring-boot-liquibase'
 	}
 }
 
