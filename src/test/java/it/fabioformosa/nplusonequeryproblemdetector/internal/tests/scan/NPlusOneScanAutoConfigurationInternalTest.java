@@ -3,7 +3,7 @@ package it.fabioformosa.nplusonequeryproblemdetector.internal.tests.scan;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneStatementInspector;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.autoconfigure.NPlusOneScanAutoConfiguration;
-import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.assertj.core.api.Assertions;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -30,7 +30,7 @@ class NPlusOneScanAutoConfigurationInternalTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(NPlusOneScanAutoConfiguration.class))
             .withPropertyValues("n-plus-one-query-detector.scan.enabled=true")
-            .withBean(EntityManager.class, () -> Mockito.mock(EntityManager.class));
+            .withBean(EntityManagerFactory.class, () -> Mockito.mock(EntityManagerFactory.class));
 
     @Test
     void givenScanModeIsEnabled_whenAutoConfigurationRuns_thenDetectorBeanIsAvailable() {

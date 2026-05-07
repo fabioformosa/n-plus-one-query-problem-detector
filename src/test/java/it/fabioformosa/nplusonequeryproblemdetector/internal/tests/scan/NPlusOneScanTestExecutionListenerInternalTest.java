@@ -6,13 +6,21 @@ import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.Compa
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneConfidence;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanReportCollector;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
+import jakarta.persistence.EntityManagerFactory;
 import org.assertj.core.api.Assertions;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.testkit.engine.EngineTestKit;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
@@ -94,6 +102,32 @@ class NPlusOneScanTestExecutionListenerInternalTest {
                 });
     }
 
+    @Test
+    void givenScanModeIsEnabledOnNonJpaSpringTest_whenSpringTestRuns_thenListenerSkipsContext() {
+        NPlusOneScanReportCollector.reset();
+
+        EngineTestKit.engine("junit-jupiter")
+                .selectors(selectClass(NonJpaScanModeCase.class))
+                .execute()
+                .testEvents()
+                .succeeded()
+                .assertStatistics(stats -> stats.succeeded(1));
+
+        Assertions.assertThat(NPlusOneScanReportCollector.findings()).isEmpty();
+    }
+
+    @Test
+    void givenScanModeIsEnabledWithoutDetectorBean_whenEntityManagerFactoryExists_thenListenerUsesFallbackDetector() {
+        NPlusOneScanReportCollector.reset();
+
+        EngineTestKit.engine("junit-jupiter")
+                .selectors(selectClass(EntityManagerFactoryOnlyScanModeCase.class))
+                .execute()
+                .testEvents()
+                .succeeded()
+                .assertStatistics(stats -> stats.succeeded(1));
+    }
+
     @TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=false")
     static class DisabledScanModeCase extends AbstractIntegrationTestSuite {
         @Autowired
@@ -148,6 +182,51 @@ class NPlusOneScanTestExecutionListenerInternalTest {
         void givenLazyCollectionsAreFetched_whenAssociationIsExcluded_thenTheTestDoesNotFail() {
             PaginatedListDto<CompanyDto> companyDtoList = companyService.list(0, 5);
             Assertions.assertThat(companyDtoList.getItems()).hasSize(5);
+        }
+    }
+
+    @SpringJUnitConfig(NonJpaConfig.class)
+    @TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=true")
+    static class NonJpaScanModeCase {
+        @Autowired
+        private ApplicationContext applicationContext;
+
+        @Test
+        void givenNoJpaInfrastructure_whenScanIsEnabled_thenTestStillRuns() {
+            Assertions.assertThat(applicationContext.getBeanProvider(EntityManagerFactory.class).getIfAvailable()).isNull();
+        }
+    }
+
+    @SpringJUnitConfig(EntityManagerFactoryOnlyConfig.class)
+    @TestPropertySource(properties = "n-plus-one-query-detector.scan.enabled=true")
+    static class EntityManagerFactoryOnlyScanModeCase {
+        @Autowired
+        private ApplicationContext applicationContext;
+
+        @Test
+        void givenEntityManagerFactoryOnly_whenScanIsEnabled_thenTestStillRuns() {
+            Assertions.assertThat(applicationContext.getBeanProvider(EntityManagerFactory.class).getIfAvailable()).isNotNull();
+        }
+    }
+
+    @Configuration
+    static class NonJpaConfig {
+    }
+
+    @Configuration
+    static class EntityManagerFactoryOnlyConfig {
+        @Bean
+        EntityManagerFactory entityManagerFactory() {
+            Statistics statistics = Mockito.mock(Statistics.class);
+            Mockito.when(statistics.getCollectionRoleNames()).thenReturn(new String[0]);
+            Mockito.when(statistics.getEntityNames()).thenReturn(new String[0]);
+
+            SessionFactory sessionFactory = Mockito.mock(SessionFactory.class);
+            Mockito.when(sessionFactory.getStatistics()).thenReturn(statistics);
+
+            EntityManagerFactory entityManagerFactory = Mockito.mock(EntityManagerFactory.class);
+            Mockito.when(entityManagerFactory.unwrap(SessionFactory.class)).thenReturn(sessionFactory);
+            return entityManagerFactory;
         }
     }
 }

@@ -3,6 +3,8 @@ package it.fabioformosa.nplusonequeryproblemdetector.scan;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneMonitoredStats;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.rules.NPlusOneDetectionRules;
+import jakarta.persistence.EntityManagerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
@@ -27,7 +29,11 @@ public class NPlusOneScanTestExecutionListener implements TestExecutionListener,
             return;
         }
 
-        NPlusOneQueryProblemDetector detector = testContext.getApplicationContext().getBean(NPlusOneQueryProblemDetector.class);
+        NPlusOneQueryProblemDetector detector = resolveDetector(testContext.getApplicationContext());
+        if (detector == null) {
+            return;
+        }
+
         detector.startMonitoring();
 
         SqlStatementCapture.start();
@@ -73,5 +79,18 @@ public class NPlusOneScanTestExecutionListener implements TestExecutionListener,
             NPlusOneScanProperties properties,
             NPlusOneQueryProblemDetector detector
     ) {
+    }
+
+    private NPlusOneQueryProblemDetector resolveDetector(ApplicationContext applicationContext) {
+        NPlusOneQueryProblemDetector detector = applicationContext.getBeanProvider(NPlusOneQueryProblemDetector.class).getIfAvailable();
+        if (detector != null && detector.canMonitor()) {
+            return detector;
+        }
+
+        EntityManagerFactory entityManagerFactory = applicationContext.getBeanProvider(EntityManagerFactory.class).getIfAvailable();
+        if (entityManagerFactory == null) {
+            return null;
+        }
+        return new NPlusOneQueryProblemDetector(entityManagerFactory);
     }
 }

@@ -2,9 +2,11 @@ package it.fabioformosa.nplusonequeryproblemdetector.scan.autoconfigure;
 
 import it.fabioformosa.nplusonequeryproblemdetector.engine.NPlusOneQueryProblemDetector;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneStatementInspector;
+import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,9 +32,10 @@ public class NPlusOneScanAutoConfiguration {
             "org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer";
 
     @Bean
+    @ConditionalOnBean(EntityManagerFactory.class)
     @ConditionalOnMissingBean
-    NPlusOneQueryProblemDetector nPlusOneQueryProblemDetector() {
-        return new NPlusOneQueryProblemDetector();
+    NPlusOneQueryProblemDetector nPlusOneQueryProblemDetector(EntityManagerFactory entityManagerFactory) {
+        return new NPlusOneQueryProblemDetector(entityManagerFactory);
     }
 
     @Bean

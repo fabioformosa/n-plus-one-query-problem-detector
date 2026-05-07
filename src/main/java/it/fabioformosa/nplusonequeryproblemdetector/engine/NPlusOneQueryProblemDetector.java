@@ -1,7 +1,9 @@
 package it.fabioformosa.nplusonequeryproblemdetector.engine;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,12 +17,27 @@ import java.util.stream.Collectors;
 @SuppressWarnings("java:S6813")
 public class NPlusOneQueryProblemDetector {
 
-    @Autowired
+    @Autowired(required = false)
     private EntityManager entityManager;
+
+    @Autowired(required = false)
+    private EntityManagerFactory entityManagerFactory;
 
     private HibernateDetailedStatsSnapshot startSnapshot;
     private HibernateDetailedStatsSnapshot endSnapshot;
     private boolean statisticsEnabledBeforeMonitoring;
+
+    @Autowired
+    public NPlusOneQueryProblemDetector() {
+    }
+
+    public NPlusOneQueryProblemDetector(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
+    }
+
+    public boolean canMonitor() {
+        return entityManagerFactory != null || entityManager != null;
+    }
 
     public void startMonitoring() {
         Statistics statistics = getSessionStatistics();
@@ -36,6 +53,9 @@ public class NPlusOneQueryProblemDetector {
     }
 
     private Statistics getSessionStatistics() {
+        if (entityManagerFactory != null) {
+            return entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        }
         Session session = entityManager.unwrap(Session.class);
         return session.getSessionFactory().getStatistics();
     }
