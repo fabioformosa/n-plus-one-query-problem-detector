@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.2
+- `FIX` Fixed the unavailability of the detector object out of integration tests based on a Spring Context
+
 ## 1.0.1
 - `FIX` Fixed a compatibility issue with consumer project based on Spring Boot 3
 
