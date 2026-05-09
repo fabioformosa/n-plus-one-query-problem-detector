@@ -302,16 +302,18 @@ class NPlusOneScanTestExecutionListenerInternalTest {
         private final List<String> messages = new ArrayList<>();
 
         @Override
-        public void publish(LogRecord record) {
-            messages.add(record.getMessage());
+        public void publish(LogRecord logRecord) {
+            messages.add(logRecord.getMessage());
         }
 
         @Override
         public void flush() {
+            // Nothing to flush because records are stored in memory for assertions.
         }
 
         @Override
         public void close() {
+            // Nothing to close because this handler does not own external resources.
         }
 
         List<String> messages() {

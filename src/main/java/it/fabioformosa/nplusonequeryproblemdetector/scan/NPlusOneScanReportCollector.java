@@ -1,6 +1,9 @@
 package it.fabioformosa.nplusonequeryproblemdetector.scan;
 
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -14,6 +17,7 @@ public final class NPlusOneScanReportCollector {
 
     private static final Logger LOGGER = Logger.getLogger(NPlusOneScanReportCollector.class.getName());
     private static final String REPORT_SEPARATOR = "================================================================================\n";
+    private static final PrintStream STANDARD_OUTPUT = new PrintStream(new FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8);
     private static final List<NPlusOneFinding> FINDINGS = new CopyOnWriteArrayList<>();
     private static final AtomicBoolean SHUTDOWN_HOOK_REGISTERED = new AtomicBoolean(false);
     private static final AtomicReference<NPlusOneScanProperties> LAST_PROPERTIES = new AtomicReference<>(NPlusOneScanProperties.defaults());
@@ -29,7 +33,7 @@ public final class NPlusOneScanReportCollector {
             return;
         }
         if (SHUTDOWN_HOOK_REGISTERED.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> writeShutdownReport(LAST_PROPERTIES.get(), System.out), "nplusone-scan-report"));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> writeShutdownReport(LAST_PROPERTIES.get(), STANDARD_OUTPUT), "nplusone-scan-report"));
         }
     }
 
@@ -60,6 +64,7 @@ public final class NPlusOneScanReportCollector {
             case LOGGER -> LOGGER.info(() -> renderReport(properties));
             case STDOUT -> stdout.print(renderReport(properties));
             case DISABLED -> {
+                // Report output is intentionally suppressed by configuration.
             }
         }
     }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1
+- `FIX` Resolved SonarLint issues in scan report output handling and scan-mode test helpers.
+
 ## 1.1.0
 - `NEW FEATURE` Added `n-plus-one-query-detector.scan.report.output` to choose how scan-mode reports are emitted (`logger`, `stdout`, or `disabled`).
 
