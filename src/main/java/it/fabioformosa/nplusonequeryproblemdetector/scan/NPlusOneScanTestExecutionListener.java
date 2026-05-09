@@ -10,8 +10,11 @@ import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class NPlusOneScanTestExecutionListener implements TestExecutionListener, Ordered {
+
+    private static final Logger LOGGER = Logger.getLogger(NPlusOneScanTestExecutionListener.class.getName());
 
     private static final ThreadLocal<NPlusOneScanSession> CURRENT_SESSION = new ThreadLocal<>();
 
@@ -29,8 +32,14 @@ public class NPlusOneScanTestExecutionListener implements TestExecutionListener,
             return;
         }
 
+        NPlusOneScanReportCollector.registerShutdownHookOnce(properties);
+        NPlusOneScanReportCollector.recordObservedTest();
+
         NPlusOneQueryProblemDetector detector = resolveDetector(testContext.getApplicationContext());
         if (detector == null) {
+            LOGGER.info(() -> "N+1 query scan is enabled, but no monitorable EntityManagerFactory was found for "
+                    + testContext.getTestClass().getName() + "." + testContext.getTestMethod().getName()
+                    + "; skipping this test.");
             return;
         }
 
@@ -38,8 +47,6 @@ public class NPlusOneScanTestExecutionListener implements TestExecutionListener,
 
         SqlStatementCapture.start();
         CURRENT_SESSION.set(new NPlusOneScanSession(properties, detector));
-        NPlusOneScanReportCollector.registerShutdownHookOnce(properties);
-        NPlusOneScanReportCollector.recordObservedTest();
     }
 
     @Override

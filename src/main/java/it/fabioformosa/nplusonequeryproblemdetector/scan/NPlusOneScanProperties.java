@@ -10,6 +10,7 @@ public record NPlusOneScanProperties(
         boolean failOnDetected,
         NPlusOneConfidence failOnConfidence,
         boolean includeCleanTests,
+        NPlusOneScanReportOutput reportOutput,
         boolean printSqlFingerprints,
         int maxSqlFingerprints,
         NPlusOneThresholds thresholds,
@@ -25,6 +26,7 @@ public record NPlusOneScanProperties(
                 false,
                 NPlusOneConfidence.HIGH,
                 false,
+                NPlusOneScanReportOutput.LOGGER,
                 true,
                 5,
                 NPlusOneThresholds.defaults(),
@@ -49,6 +51,7 @@ public record NPlusOneScanProperties(
                 environment.getProperty("n-plus-one-query-detector.scan.fail-on-detected", Boolean.class, false),
                 getConfidence(environment, "n-plus-one-query-detector.scan.fail-on-confidence", NPlusOneConfidence.HIGH),
                 environment.getProperty("n-plus-one-query-detector.scan.report.include-clean-tests", Boolean.class, false),
+                getReportOutput(environment, "n-plus-one-query-detector.scan.report.output", NPlusOneScanReportOutput.LOGGER),
                 environment.getProperty("n-plus-one-query-detector.scan.report.print-sql-fingerprints", Boolean.class, true),
                 environment.getProperty("n-plus-one-query-detector.scan.report.max-sql-fingerprints", Integer.class, 5),
                 thresholds,
@@ -69,6 +72,14 @@ public record NPlusOneScanProperties(
             return defaultValue;
         }
         return NPlusOneConfidence.valueOf(value.trim().toUpperCase());
+    }
+
+    private static NPlusOneScanReportOutput getReportOutput(Environment environment, String propertyName, NPlusOneScanReportOutput defaultValue) {
+        String value = environment.getProperty(propertyName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return NPlusOneScanReportOutput.valueOf(value.trim().toUpperCase());
     }
 
     private static List<String> getList(Environment environment, String propertyName) {

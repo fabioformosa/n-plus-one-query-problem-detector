@@ -5,6 +5,7 @@ import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneConfidence;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneFinding;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanProperties;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanReportCollector;
+import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanReportOutput;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneTestIdentifier;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.SqlFingerprint;
 import org.assertj.core.api.Assertions;
@@ -67,7 +68,7 @@ class NPlusOneScanReportInternalTest {
 
         NPlusOneScanProperties defaults = enabledProperties();
         NPlusOneScanProperties properties = new NPlusOneScanProperties(true, false, defaults.failOnConfidence(), false,
-                true, 2, defaults.thresholds(), List.of(), List.of(), List.of(), List.of());
+                defaults.reportOutput(), true, 2, defaults.thresholds(), List.of(), List.of(), List.of(), List.of());
 
         String report = NPlusOneScanReportCollector.renderReport(properties);
 
@@ -103,7 +104,7 @@ class NPlusOneScanReportInternalTest {
 
     private NPlusOneScanProperties enabledProperties() {
         NPlusOneScanProperties defaults = NPlusOneScanProperties.defaults();
-        return new NPlusOneScanProperties(true, false, defaults.failOnConfidence(), false, true, 5,
-                defaults.thresholds(), List.of(), List.of(), List.of(), List.of());
+        return new NPlusOneScanProperties(true, false, defaults.failOnConfidence(), false,
+                NPlusOneScanReportOutput.LOGGER, true, 5, defaults.thresholds(), List.of(), List.of(), List.of(), List.of());
     }
 }

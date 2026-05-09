@@ -25,8 +25,11 @@ public final class NPlusOneScanReportCollector {
 
     public static void registerShutdownHookOnce(NPlusOneScanProperties properties) {
         LAST_PROPERTIES.set(properties);
+        if (properties.reportOutput() == NPlusOneScanReportOutput.DISABLED) {
+            return;
+        }
         if (SHUTDOWN_HOOK_REGISTERED.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> LOGGER.info(() -> renderReport(LAST_PROPERTIES.get())), "nplusone-scan-report"));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> writeShutdownReport(LAST_PROPERTIES.get(), System.out), "nplusone-scan-report"));
         }
     }
 
@@ -50,6 +53,15 @@ public final class NPlusOneScanReportCollector {
 
     public static void printReport(PrintStream printStream) {
         printStream.print(renderReport(LAST_PROPERTIES.get()));
+    }
+
+    static void writeShutdownReport(NPlusOneScanProperties properties, PrintStream stdout) {
+        switch (properties.reportOutput()) {
+            case LOGGER -> LOGGER.info(() -> renderReport(properties));
+            case STDOUT -> stdout.print(renderReport(properties));
+            case DISABLED -> {
+            }
+        }
     }
 
     public static String renderReport(NPlusOneScanProperties properties) {

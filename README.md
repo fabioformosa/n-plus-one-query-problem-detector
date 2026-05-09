@@ -210,9 +210,20 @@ n-plus-one-query-detector.scan.excluded-sql-fingerprint-patterns=.*from audit_lo
 Report formatting options:
 
 ```properties
+n-plus-one-query-detector.scan.report.output=logger
 n-plus-one-query-detector.scan.report.print-sql-fingerprints=true
 n-plus-one-query-detector.scan.report.max-sql-fingerprints=5
 ```
+
+`n-plus-one-query-detector.scan.report.output` controls how the aggregate shutdown report is emitted:
+
+Default value: `logger`.
+
+| Value | Behavior |
+| --- | --- |
+| `logger` | Prints the report through `java.util.logging.Logger.info(...)`. This is the default for compatibility. |
+| `stdout` | Prints the report directly to `System.out`. Use this if Gradle, Maven, or your IDE does not show the shutdown report. |
+| `disabled` | Does not print the aggregate shutdown report. Detection and `fail-on-detected` still work. |
 
 `n-plus-one-query-detector.scan.report.max-sql-fingerprints` limits how many repeated SQL fingerprints are printed per finding. It does not affect detection.
 

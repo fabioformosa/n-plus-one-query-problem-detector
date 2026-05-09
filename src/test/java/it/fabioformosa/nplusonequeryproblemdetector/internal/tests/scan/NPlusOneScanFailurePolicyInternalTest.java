@@ -47,7 +47,7 @@ class NPlusOneScanFailurePolicyInternalTest {
 
     private NPlusOneScanProperties properties(boolean failOnDetected, NPlusOneConfidence failOnConfidence) {
         NPlusOneScanProperties defaults = NPlusOneScanProperties.defaults();
-        return new NPlusOneScanProperties(true, failOnDetected, failOnConfidence, false, true, 5,
+        return new NPlusOneScanProperties(true, failOnDetected, failOnConfidence, false, defaults.reportOutput(), true, 5,
                 defaults.thresholds(), List.of(), List.of(), List.of(), List.of());
     }
 }

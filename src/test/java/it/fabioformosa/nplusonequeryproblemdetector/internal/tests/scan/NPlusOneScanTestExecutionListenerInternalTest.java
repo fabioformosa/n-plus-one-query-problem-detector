@@ -4,7 +4,9 @@ import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.CompanyDt
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.dtos.PaginatedListDto;
 import it.fabioformosa.nplusonequeryproblemdetector.sampleproject.services.CompanyService;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneConfidence;
+import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanProperties;
 import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanReportCollector;
+import it.fabioformosa.nplusonequeryproblemdetector.scan.NPlusOneScanTestExecutionListener;
 import it.fabioformosa.nplusonequeryproblemdetector.utilities.AbstractIntegrationTestSuite;
 import jakarta.persistence.EntityManagerFactory;
 import org.assertj.core.api.Assertions;
@@ -22,6 +24,19 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 
 class NPlusOneScanTestExecutionListenerInternalTest {
@@ -31,6 +46,29 @@ class NPlusOneScanTestExecutionListenerInternalTest {
     @AfterEach
     void cleanCollector() {
         NPlusOneScanReportCollector.reset();
+    }
+
+    @Test
+    void givenLibraryIsOnClasspath_whenSpringFactoriesAreLoaded_thenScanListenerIsDiscovered() throws IOException {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        List<String> listenerClassNames = new ArrayList<>();
+
+        for (URL springFactoriesUrl : Collections.list(classLoader.getResources("META-INF/spring.factories"))) {
+            Properties springFactories = new Properties();
+            try (InputStream inputStream = springFactoriesUrl.openStream()) {
+                springFactories.load(inputStream);
+            }
+            String testExecutionListeners = springFactories.getProperty("org.springframework.test.context.TestExecutionListener");
+            if (testExecutionListeners != null) {
+                listenerClassNames.addAll(Arrays.stream(testExecutionListeners.split(","))
+                        .map(entry -> entry.replace("\\", "").trim())
+                        .filter(entry -> !entry.isBlank())
+                        .toList());
+            }
+        }
+
+        Assertions.assertThat(listenerClassNames)
+                .contains(NPlusOneScanTestExecutionListener.class.getName());
     }
 
     @Test
@@ -114,6 +152,36 @@ class NPlusOneScanTestExecutionListenerInternalTest {
                 .assertStatistics(stats -> stats.succeeded(1));
 
         Assertions.assertThat(NPlusOneScanReportCollector.findings()).isEmpty();
+        Assertions.assertThat(NPlusOneScanReportCollector.renderReport(NPlusOneScanProperties.defaults()))
+                .contains("Observed tests: 1")
+                .contains("No N+1 query candidates were detected.");
+    }
+
+    @Test
+    void givenScanModeIsEnabledOnNonJpaSpringTest_whenSpringTestRuns_thenDiagnosticIsLogged() {
+        NPlusOneScanReportCollector.reset();
+        Logger listenerLogger = Logger.getLogger(NPlusOneScanTestExecutionListener.class.getName());
+        CapturingLogHandler capturingLogHandler = new CapturingLogHandler();
+        Level previousLevel = listenerLogger.getLevel();
+        listenerLogger.setLevel(Level.INFO);
+        listenerLogger.addHandler(capturingLogHandler);
+
+        try {
+            EngineTestKit.engine("junit-jupiter")
+                    .selectors(selectClass(NonJpaScanModeCase.class))
+                    .execute()
+                    .testEvents()
+                    .succeeded()
+                    .assertStatistics(stats -> stats.succeeded(1));
+        } finally {
+            listenerLogger.removeHandler(capturingLogHandler);
+            listenerLogger.setLevel(previousLevel);
+        }
+
+        Assertions.assertThat(capturingLogHandler.messages())
+                .anySatisfy(message -> Assertions.assertThat(message)
+                        .contains("N+1 query scan is enabled")
+                        .contains("no monitorable EntityManagerFactory"));
     }
 
     @Test
@@ -227,6 +295,27 @@ class NPlusOneScanTestExecutionListenerInternalTest {
             EntityManagerFactory entityManagerFactory = Mockito.mock(EntityManagerFactory.class);
             Mockito.when(entityManagerFactory.unwrap(SessionFactory.class)).thenReturn(sessionFactory);
             return entityManagerFactory;
+        }
+    }
+
+    private static final class CapturingLogHandler extends Handler {
+        private final List<String> messages = new ArrayList<>();
+
+        @Override
+        public void publish(LogRecord record) {
+            messages.add(record.getMessage());
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() {
+        }
+
+        List<String> messages() {
+            return messages;
         }
     }
 }

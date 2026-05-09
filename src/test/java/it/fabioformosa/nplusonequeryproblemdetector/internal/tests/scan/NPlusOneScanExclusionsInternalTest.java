@@ -70,6 +70,7 @@ class NPlusOneScanExclusionsInternalTest {
                 defaults.failOnDetected(),
                 defaults.failOnConfidence(),
                 defaults.includeCleanTests(),
+                defaults.reportOutput(),
                 defaults.printSqlFingerprints(),
                 defaults.maxSqlFingerprints(),
                 defaults.thresholds(),
