@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- `FIX` now the scan-mode report aggregates results by test-method names
+
 ## 1.1.1
 - `FIX` Resolved SonarLint issues in scan report output handling and scan-mode test helpers.
 
