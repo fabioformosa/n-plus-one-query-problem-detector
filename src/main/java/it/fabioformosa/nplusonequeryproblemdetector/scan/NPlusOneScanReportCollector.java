@@ -1,12 +1,18 @@
 package it.fabioformosa.nplusonequeryproblemdetector.scan;
 
+import it.fabioformosa.nplusonequeryproblemdetector.engine.HibernateStatsSnapshot;
+
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -72,8 +78,9 @@ public final class NPlusOneScanReportCollector {
     public static String renderReport(NPlusOneScanProperties properties) {
         List<NPlusOneFinding> findings = new ArrayList<>(FINDINGS);
         findings.sort(Comparator.comparing(NPlusOneFinding::getConfidence).thenComparing(f -> f.getTestIdentifier().displayName()));
+        List<AggregatedFinding> aggregatedFindings = aggregateByTest(findings);
 
-        long includedFindings = findings.stream().filter(finding -> !finding.isExcluded()).count();
+        long affectedTests = aggregatedFindings.stream().filter(AggregatedFinding::hasIncludedFindings).count();
         long excludedFindings = findings.stream().filter(NPlusOneFinding::isExcluded).count();
 
         StringBuilder report = new StringBuilder();
@@ -83,56 +90,89 @@ public final class NPlusOneScanReportCollector {
         report.append("Scan mode: ENABLED\n");
         report.append("Fail on detected: ").append(properties.failOnDetected()).append("\n");
         report.append("Observed tests: ").append(OBSERVED_TESTS.get()).append("\n");
-        report.append("Affected tests: ").append(includedFindings).append("\n");
+        report.append("Affected tests: ").append(affectedTests).append("\n");
         report.append("Excluded findings: ").append(excludedFindings).append("\n\n");
 
         if (findings.isEmpty()) {
             report.append("No N+1 query candidates were detected.\n");
         }
 
-        for (NPlusOneFinding finding : findings) {
+        for (AggregatedFinding finding : aggregatedFindings) {
             appendFinding(report, finding, properties);
         }
 
-        appendSummary(report, findings, properties);
+        appendSummary(report, aggregatedFindings, excludedFindings, properties);
         return report.toString();
     }
 
-    private static void appendFinding(StringBuilder report, NPlusOneFinding finding, NPlusOneScanProperties properties) {
-        report.append("--------------------------------------------------------------------------------\n");
-        report.append("[").append(finding.isExcluded() ? "EXCLUDED " : "").append(finding.getConfidence()).append("] ")
-                .append(finding.getTestIdentifier().displayName()).append("\n");
-        report.append("--------------------------------------------------------------------------------\n");
-        if (finding.isExcluded()) {
-            report.append("Exclusion: ").append(finding.getExclusionReason()).append("\n\n");
+    private static List<AggregatedFinding> aggregateByTest(List<NPlusOneFinding> findings) {
+        Map<NPlusOneTestIdentifier, List<NPlusOneFinding>> findingsByTest = new LinkedHashMap<>();
+        for (NPlusOneFinding finding : findings) {
+            findingsByTest.computeIfAbsent(finding.getTestIdentifier(), ignored -> new ArrayList<>()).add(finding);
         }
-        report.append("Reason:\n  ").append(finding.getReason()).append("\n\n");
-        report.append("Hibernate statistics:\n");
-        report.append("  Query executions:        ").append(finding.getStats().getQueryExecutionCount()).append("\n");
-        report.append("  Prepared statements:     ").append(finding.getStats().getPrepareStatementCount()).append("\n");
-        report.append("  Entity fetches:          ").append(finding.getStats().getEntityFetchCount()).append("\n");
-        report.append("  Collection fetches:      ").append(finding.getStats().getCollectionFetchCount()).append("\n");
-        report.append("  Second-level cache hits: ").append(finding.getStats().getSecondLevelCacheHitCount()).append("\n\n");
+        return findingsByTest.entrySet().stream()
+                .map(entry -> new AggregatedFinding(entry.getKey(), entry.getValue()))
+                .toList();
+    }
 
-        if (finding.getAssociationRole() != null) {
-            report.append("Likely affected association:\n  ").append(finding.getAssociationRole()).append("\n\n");
-        } else if (finding.getEntityName() != null) {
-            report.append("Likely fetched entity:\n  ").append(finding.getEntityName()).append("\n\n");
-        } else {
+    private static void appendFinding(StringBuilder report, AggregatedFinding finding, NPlusOneScanProperties properties) {
+        report.append("--------------------------------------------------------------------------------\n");
+        report.append("[").append(finding.isFullyExcluded() ? "EXCLUDED " : "").append(finding.confidence()).append("] ")
+                .append(finding.testIdentifier().displayName()).append("\n");
+        report.append("--------------------------------------------------------------------------------\n");
+        appendExclusionDetails(report, finding);
+        appendLines(report, finding.reasons().size() == 1 ? "Reason" : "Reasons", finding.reasons());
+        appendHibernateStatistics(report, finding);
+        appendLikelyAffectedFetches(report, finding);
+        appendSqlFingerprints(report, finding, properties);
+        appendSuggestedFixes(report);
+    }
+
+    private static void appendExclusionDetails(StringBuilder report, AggregatedFinding finding) {
+        if (finding.isFullyExcluded()) {
+            appendLines(report, "Exclusion", finding.exclusionReasons());
+        } else if (finding.excludedCount() > 0) {
+            report.append("Excluded findings in this test: ").append(finding.excludedCount()).append("\n\n");
+        }
+    }
+
+    private static void appendHibernateStatistics(StringBuilder report, AggregatedFinding finding) {
+        report.append("Hibernate statistics:\n");
+        report.append("  Query executions:        ").append(finding.stats().getQueryExecutionCount()).append("\n");
+        report.append("  Prepared statements:     ").append(finding.stats().getPrepareStatementCount()).append("\n");
+        report.append("  Entity fetches:          ").append(finding.stats().getEntityFetchCount()).append("\n");
+        report.append("  Collection fetches:      ").append(finding.stats().getCollectionFetchCount()).append("\n");
+        report.append("  Second-level cache hits: ").append(finding.stats().getSecondLevelCacheHitCount()).append("\n\n");
+    }
+
+    private static void appendLikelyAffectedFetches(StringBuilder report, AggregatedFinding finding) {
+        if (!finding.associationRoles().isEmpty()) {
+            appendLines(report, finding.associationRoles().size() == 1 ? "Likely affected association" : "Likely affected associations", finding.associationRoles());
+        }
+        if (!finding.entityNames().isEmpty()) {
+            appendLines(report, finding.entityNames().size() == 1 ? "Likely fetched entity" : "Likely fetched entities", finding.entityNames());
+        }
+        if (finding.associationRoles().isEmpty() && finding.entityNames().isEmpty()) {
             report.append("Likely affected association:\n  Unknown\n\n");
         }
+    }
 
-        if (properties.printSqlFingerprints() && !finding.getRepeatedSqlFingerprints().isEmpty()) {
-            report.append("Repeated SQL fingerprints:\n");
-            finding.getRepeatedSqlFingerprints().stream()
-                    .limit(properties.maxSqlFingerprints())
-                    .forEach(fingerprint -> report.append("  ").append(fingerprint.count()).append("x ").append(fingerprint.sql()).append("\n"));
-            if (finding.getRepeatedSqlFingerprints().size() > properties.maxSqlFingerprints()) {
-                report.append("  ... ").append(finding.getRepeatedSqlFingerprints().size() - properties.maxSqlFingerprints()).append(" more omitted\n");
-            }
-            report.append("\n");
+    private static void appendSqlFingerprints(StringBuilder report, AggregatedFinding finding, NPlusOneScanProperties properties) {
+        if (!properties.printSqlFingerprints() || finding.repeatedSqlFingerprints().isEmpty()) {
+            return;
         }
 
+        report.append("Repeated SQL fingerprints:\n");
+        finding.repeatedSqlFingerprints().stream()
+                .limit(properties.maxSqlFingerprints())
+                .forEach(fingerprint -> report.append("  ").append(fingerprint.count()).append("x ").append(fingerprint.sql()).append("\n"));
+        if (finding.repeatedSqlFingerprints().size() > properties.maxSqlFingerprints()) {
+            report.append("  ... ").append(finding.repeatedSqlFingerprints().size() - properties.maxSqlFingerprints()).append(" more omitted\n");
+        }
+        report.append("\n");
+    }
+
+    private static void appendSuggestedFixes(StringBuilder report) {
         report.append("Suggested fixes:\n");
         report.append("  1. Use JOIN FETCH [RECOMMENDED] when this use case always needs the association.\n");
         report.append("  2. Use EntityGraph when the fetch shape should be declarative or reusable.\n");
@@ -140,23 +180,99 @@ public final class NPlusOneScanReportCollector {
         report.append("  4. Use DTO/projection queries when only selected fields are needed.\n\n");
     }
 
-    private static void appendSummary(StringBuilder report, List<NPlusOneFinding> findings, NPlusOneScanProperties properties) {
+    private static void appendLines(StringBuilder report, String label, List<String> lines) {
+        report.append(label).append(":\n");
+        lines.forEach(line -> report.append("  ").append(line).append("\n"));
+        report.append("\n");
+    }
+
+    private static void appendSummary(StringBuilder report, List<AggregatedFinding> findings, long excludedFindings, NPlusOneScanProperties properties) {
         report.append(REPORT_SEPARATOR);
         report.append("Summary by confidence\n");
         report.append(REPORT_SEPARATOR);
         report.append("HIGH:   ").append(countIncluded(findings, NPlusOneConfidence.HIGH)).append("\n");
         report.append("MEDIUM: ").append(countIncluded(findings, NPlusOneConfidence.MEDIUM)).append("\n");
         report.append("LOW:    ").append(countIncluded(findings, NPlusOneConfidence.LOW)).append("\n");
-        report.append("EXCLUDED: ").append(findings.stream().filter(NPlusOneFinding::isExcluded).count()).append("\n\n");
+        report.append("EXCLUDED: ").append(excludedFindings).append("\n\n");
         report.append("Build result:\n");
         report.append("  Tests ").append(properties.failOnDetected() ? "may fail on non-excluded findings at or above " + properties.failOnConfidence() : "were not failed because n-plus-one-query-detector.scan.fail-on-detected=false").append(".\n");
         report.append(REPORT_SEPARATOR);
     }
 
-    private static long countIncluded(List<NPlusOneFinding> findings, NPlusOneConfidence confidence) {
+    private static long countIncluded(List<AggregatedFinding> findings, NPlusOneConfidence confidence) {
         return findings.stream()
-                .filter(finding -> !finding.isExcluded())
-                .filter(finding -> finding.getConfidence() == confidence)
+                .filter(AggregatedFinding::hasIncludedFindings)
+                .filter(finding -> finding.confidence() == confidence)
                 .count();
+    }
+
+    private record AggregatedFinding(NPlusOneTestIdentifier testIdentifier, List<NPlusOneFinding> findings) {
+
+        private boolean hasIncludedFindings() {
+            return findings.stream().anyMatch(finding -> !finding.isExcluded());
+        }
+
+        private boolean isFullyExcluded() {
+            return !findings.isEmpty() && findings.stream().allMatch(NPlusOneFinding::isExcluded);
+        }
+
+        private long excludedCount() {
+            return findings.stream().filter(NPlusOneFinding::isExcluded).count();
+        }
+
+        private NPlusOneConfidence confidence() {
+            return reportableFindings().stream()
+                    .map(NPlusOneFinding::getConfidence)
+                    .min(Comparator.naturalOrder())
+                    .orElse(NPlusOneConfidence.LOW);
+        }
+
+        private HibernateStatsSnapshot stats() {
+            return reportableFindings().getFirst().getStats();
+        }
+
+        private List<String> reasons() {
+            return distinctStrings(reportableFindings().stream()
+                    .map(NPlusOneFinding::getReason)
+                    .toList());
+        }
+
+        private List<String> exclusionReasons() {
+            return distinctStrings(findings.stream()
+                    .map(NPlusOneFinding::getExclusionReason)
+                    .filter(reason -> reason != null && !reason.isBlank())
+                    .toList());
+        }
+
+        private List<String> associationRoles() {
+            return distinctStrings(reportableFindings().stream()
+                    .map(NPlusOneFinding::getAssociationRole)
+                    .filter(associationRole -> associationRole != null && !associationRole.isBlank())
+                    .toList());
+        }
+
+        private List<String> entityNames() {
+            return distinctStrings(reportableFindings().stream()
+                    .map(NPlusOneFinding::getEntityName)
+                    .filter(entityName -> entityName != null && !entityName.isBlank())
+                    .toList());
+        }
+
+        private List<SqlFingerprint> repeatedSqlFingerprints() {
+            Set<SqlFingerprint> fingerprints = new LinkedHashSet<>();
+            reportableFindings().forEach(finding -> fingerprints.addAll(finding.getRepeatedSqlFingerprints()));
+            return List.copyOf(fingerprints);
+        }
+
+        private List<NPlusOneFinding> reportableFindings() {
+            List<NPlusOneFinding> includedFindings = findings.stream()
+                    .filter(finding -> !finding.isExcluded())
+                    .toList();
+            return includedFindings.isEmpty() ? findings : includedFindings;
+        }
+
+        private List<String> distinctStrings(List<String> values) {
+            return List.copyOf(new LinkedHashSet<>(values));
+        }
     }
 }

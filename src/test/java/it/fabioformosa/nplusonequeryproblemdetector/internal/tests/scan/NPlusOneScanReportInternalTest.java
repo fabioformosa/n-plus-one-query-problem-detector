@@ -50,6 +50,37 @@ class NPlusOneScanReportInternalTest {
     }
 
     @Test
+    void givenMultipleEntityFindingsForSameTest_whenReportIsRendered_thenTheyAreAggregatedByTestMethod() {
+        NPlusOneScanReportCollector.recordObservedTest();
+        NPlusOneTestIdentifier testIdentifier = new NPlusOneTestIdentifier("CompanyServiceTest", "list");
+        HibernateStatsSnapshot stats = HibernateStatsSnapshot.builder()
+                .queryExecutionCount(60)
+                .prepareStatementCount(145)
+                .entityFetchCount(32)
+                .build();
+        NPlusOneScanReportCollector.addFindings(List.of(
+                new NPlusOneFinding(testIdentifier, NPlusOneConfidence.MEDIUM,
+                        "Lazy entity fetch count exceeded the configured threshold.", stats, null, "com.example.Company", List.of()),
+                new NPlusOneFinding(testIdentifier, NPlusOneConfidence.MEDIUM,
+                        "Lazy entity fetch count exceeded the configured threshold.", stats, null, "com.example.Department", List.of()),
+                new NPlusOneFinding(testIdentifier, NPlusOneConfidence.MEDIUM,
+                        "Lazy entity fetch count exceeded the configured threshold.", stats, null, "com.example.Employee", List.of())
+        ));
+
+        String report = NPlusOneScanReportCollector.renderReport(enabledProperties());
+
+        Assertions.assertThat(report)
+                .contains("Affected tests: 1")
+                .contains("MEDIUM: 1")
+                .containsOnlyOnce("[MEDIUM] CompanyServiceTest.list")
+                .containsOnlyOnce("Suggested fixes:")
+                .contains("Likely fetched entities:")
+                .contains("com.example.Company")
+                .contains("com.example.Department")
+                .contains("com.example.Employee");
+    }
+
+    @Test
     void givenMoreSqlFingerprintsThanReportLimit_whenReportIsRendered_thenOnlyConfiguredNumberIsPrinted() {
         NPlusOneScanReportCollector.recordObservedTest();
         NPlusOneScanReportCollector.addFindings(List.of(new NPlusOneFinding(
